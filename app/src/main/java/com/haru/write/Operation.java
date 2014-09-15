@@ -12,7 +12,7 @@ public abstract class Operation<T> {
 
     protected List<T> objects = new ArrayList<T>();
 
-    public Operation(T object) {
+    protected Operation(T object) {
         objects.add(object);
     }
 

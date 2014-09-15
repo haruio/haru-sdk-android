@@ -1,5 +1,7 @@
 package com.haru;
 
+import android.content.Context;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,30 +21,70 @@ public class Haru {
     private static String mAppKey;
     private static String mSdkKey;
 
-    public static void initialize(String appKey, String sdkKey) {
+    /**
+     * Haru Android SDK를 초기화한다.
+     * 앱이 초기화될 시점에 호출되어야만 한다.
+     *
+     * @param context Application Context
+     * @param appKey Application Key - Haru 대시보드 > 설정에서 확인
+     * @param sdkKey SDK Key - Haru 대시보드 > 설정에서 확인
+     */
+    public static void initialize(Context context, String appKey, String sdkKey) {
+        if (context == null) {
+            throw new IllegalArgumentException("A context must be given.");
+        }
+        context = context.getApplicationContext();
+
         mAppKey = appKey;
         mSdkKey = sdkKey;
+
+        HaruRequest.initialize(context);
     }
 
-    public static Object encode(Object object) throws JSONException {
+    public static HaruRequest newApiRequest(String url) {
+        return new HaruRequest(API_SERVER + url);
+    }
 
-        if (object instanceof KeyValuePair) {
-            JSONObject decoded = new JSONObject();
-            decoded.put("key", ((KeyValuePair) object).getKey());
-            decoded.put("value", ((KeyValuePair) object).getValue());
-            return decoded;
+    public static HaruRequest newAuthRequest(String url) {
+        return new HaruRequest(AUTH_SERVER + url);
+    }
 
-        } else if (object instanceof List) {
-            JSONArray array = new JSONArray();
+    public static HaruRequest newWriteRequest(String url) {
+        return new HaruRequest(WRITE_SERVER + url);
+    }
 
-            Iterator<Object> iterator = ((List) object).iterator();
-            while (iterator.hasNext()) {
-                array.put(encode(iterator.hasNext()));
+    /**
+     * Encodable 객체들을 JSON 포맷으로 인코딩한다.
+     * @param object 인코딩할 객체 (Encodable, Array)
+     * @return 인코딩된 JSON (JSONObject or JSONArray)
+     */
+    public static Object encode(Object object) {
+        try {
+            if (object instanceof Encodable) {
+                return ((Encodable)object).encode();
+
+            } else if (object instanceof List) {
+                JSONArray jsonArray = new JSONArray();
+
+                Iterator<Object> iterator = ((List) object).iterator();
+                while (iterator.hasNext()) {
+                    jsonArray.put(Haru.encode(iterator.hasNext()));
+                }
+                return jsonArray;
             }
 
-            return array;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
-        return object;
+        throw new IllegalArgumentException("The given object is not encodable.");
+    }
+
+    public static String getAppKey() {
+        return mAppKey;
+    }
+
+    public static String getSdkKey() {
+        return mSdkKey;
     }
 }

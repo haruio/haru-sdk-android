@@ -1,11 +1,9 @@
 package com.haru.write;
 
-import com.haru.KeyValuePair;
+public class DeleteFieldOperation extends Operation<String> {
 
-public class DeleteFieldOperation extends Operation<KeyValuePair> {
-
-    public DeleteFieldOperation(KeyValuePair object) {
-        super(object);
+    public DeleteFieldOperation(String fieldToDeleted) {
+        super(fieldToDeleted);
     }
 
     @Override

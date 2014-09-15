@@ -1,12 +1,16 @@
 package com.haru;
 
+import com.haru.callback.SaveCallback;
+import com.haru.write.Operations;
+import com.haru.write.SetOperation;
+import com.haru.write.DeleteFieldOperation;
 import com.haru.write.Operation;
-
-import org.json.JSONObject;
+import com.haru.write.UpdateFieldOperation;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +32,8 @@ public class Entity implements Encodable {
     private List<String> deletedFields;
 
     // 서버로 보내질 Operation들이다.
-    private List<Operation> operationQueue;
+    private LinkedList<Operation> operationQueue;
+    private HashMap<String, Operations> operationSet;
 
     private String className;
     private String entityId;
@@ -77,14 +82,16 @@ public class Entity implements Encodable {
 
         } else if (value == null) {
             throw new IllegalArgumentException("value shouldn't be null");
-
         }
-        synchronized (this.lock) {
 
+        synchronized (this.lock) {
             if (deletedFields.contains(key)) {
                 // undo delete
                 deletedFields.remove(key);
             }
+
+            // set operation : add to operation queue
+            operationQueue.addLast(new SetOperation(key, value));
 
             // changed only in local
             changedData.put(key, value);
@@ -112,6 +119,7 @@ public class Entity implements Encodable {
                 changedData.remove(key);
             }
             deletedFields.add(key);
+            operationQueue.addLast(new DeleteFieldOperation(key));
         }
     }
 
@@ -123,6 +131,30 @@ public class Entity implements Encodable {
         }
     }
 
+    /**
+     * 이 Entity가 생성된 시간을 반환한다.
+     * @return Date
+     */
+    public Date getCreatedAt() {
+        synchronized (this.lock) {
+
+            return this.createdAt;
+        }
+    }
+
+    /**
+     * 이 Entity가 마지막으로 수정된 시간을 반환한다.
+     * @return Date
+     */
+    public Date getUpdatedAt() {
+        synchronized (this.lock) {
+            return this.updatedAt;
+        }
+    }
+
+    /**
+     * 서버에 저장하지 않은 변경 사항들을 전부 되돌린다.
+     */
     public void discardChanges() {
         synchronized (this.lock) {
             operationQueue.clear();
@@ -131,14 +163,51 @@ public class Entity implements Encodable {
         }
     }
 
-    public void save() {
-        synchronized (this.lock) {
+    /**
+     * 변경 사항을 백그라운드에서 저장한다.
+     */
+    public void saveInBackground() {
+        saveInBackground(null);
+    }
 
+    /**
+     * 변경 사항을 백그라운드에서 저장한다.
+     * @param callback 작업 완료시 실행할 콜백
+     */
+    public void saveInBackground(SaveCallback callback) {
+        synchronized (this.lock) {
+            mergeOperations();
+
+    gfgrtfdfredrnhnyu
         }
     }
 
+    private void addOperationToQueue(Operation operation) {
+
+    }
+
+    private void mergeOperations() {
+        Iterator<Operation> iterator = operationQueue.iterator();
+        while (iterator.hasNext()) {
+            Operation operation = iterator.next();
+            // TODO : merge operations
+        }
+    }
+
+    /**
+     * 서버로부터
+     */
+    public void fetch() {
+
+    }
+
+    /**
+     * Entity를 JSON 형태로 인코딩한다.
+     * @return
+     * @throws Exception
+     */
     @Override
-    public Object encode() throws Exception {
+    public Object encode() {
 
         return null;
     }

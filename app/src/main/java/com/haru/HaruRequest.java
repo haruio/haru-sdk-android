@@ -1,21 +1,17 @@
 package com.haru;
 
 import android.content.Context;
-import android.net.SSLCertificateSocketFactory;
-import android.net.SSLSessionCache;
+
+import com.haru.internal.Task;
 
 import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.HttpClientParams;
-import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -24,19 +20,41 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class HaruRequest {
+
+    private static final String USER_AGENT = "Haru Android";
+
+    private static HttpClient defaultClient;
+    private static String appKey, sdkKey;
 
     private HttpClient client;
     private HttpUriRequest request;
 
-    private static final String USER_AGENT = "Haru Android";
     private String endpoint;
+    private int method;
     private JSONObject params;
 
-    private static HttpClient newHttpClient() {
+    /**
+     * HaruRequest를 초기화시킨다.
+     * @param context Application Context
+     */
+    static void initialize(Context context) {
+        if (defaultClient == null) {
+            defaultClient = newHttpClient(context);
+        }
 
+        appKey = Haru.getAppKey();
+        sdkKey = Haru.getSdkKey();
+    }
+
+    /**
+     * HaruRequest의 기본값으로 HTTP Client를 생성한다.
+     * @param context Application Context
+     * @return HTTP Client
+     */
+    private static HttpClient newHttpClient(Context context) {
         HttpParams params = new BasicHttpParams();
 
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -64,15 +82,37 @@ public class HaruRequest {
     }
 
     public HaruRequest() {
-        client = newHttpClient();
+        client = defaultClient;
     }
 
     public HaruRequest(String url) {
-        this();
+        client = defaultClient;
         endpoint = url;
     }
 
-    public void setUrl(String url) { endpoint = url; }
+    public HaruRequest(int method, String url) {
+        client = defaultClient;
+        endpoint = url;
+        this.method = method;
+    }
+
+    public Task<JSONObject> execute() {
+        return Task.call(new Callable<JSONObject>() {
+            @Override
+            public JSONObject call() throws Exception {
+                HttpResponse response = client.execute(request);
+                return null;
+            }
+        });
+    }
+
+    public void setUrl(String url) {
+        endpoint = url;
+    }
+
+    public void setMethod(int method) {
+        this.method = method;
+    }
 
     void put(String key, String value) {
         try {

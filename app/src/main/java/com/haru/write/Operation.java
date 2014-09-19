@@ -1,14 +1,17 @@
 package com.haru.write;
 
+import com.haru.Encodable;
 import com.haru.Haru;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-public abstract class Operation<T> {
+public abstract class Operation<T> implements Encodable {
 
     protected List<T> objects = new ArrayList<T>();
 
@@ -16,13 +19,12 @@ public abstract class Operation<T> {
         objects.add(object);
     }
 
-    protected abstract String getMethod();
+    public abstract String getMethod();
 
-    public JSONObject describeToJson() throws JSONException {
-        JSONObject object = new JSONObject();
-        object.put("method", getMethod());
-        object.put("objects", Haru.encode(objects));
+    public abstract void mergeFromPrevious(Operation other);
 
-        return object;
+    @Override
+    public Object encode() throws Exception {
+        return Haru.encode(objects);
     }
 }

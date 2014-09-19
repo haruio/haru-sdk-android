@@ -7,7 +7,7 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  *
  */
-package com.haru.internal;
+package com.haru.task;
 
 import android.annotation.SuppressLint;
 import android.os.Build;

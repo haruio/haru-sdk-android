@@ -1,11 +1,11 @@
-package com.haru.internal;
+package com.haru.task;
 
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Collection of {@link java.util.concurrent.Executor}s to use in conjunction with {@link Task}.
+ * Collection of {@link java.util.concurrent.Executor}s to use in conjunction with {@link com.haru.task.Task}.
  */
 /* package */ final class BoltsExecutors {
 
@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 
   /**
    * An {@link java.util.concurrent.Executor} that executes tasks in the current thread unless
-   * the stack runs too deep, at which point it will delegate to {@link com.haru.internal.BoltsExecutors#background}
+   * the stack runs too deep, at which point it will delegate to {@link BoltsExecutors#background}
    * in order to trim the stack.
    */
   /* package */ static Executor immediate() {
@@ -48,7 +48,7 @@ import java.util.concurrent.ExecutorService;
   /**
    * An {@link java.util.concurrent.Executor} that runs a runnable inline (rather than scheduling it
    * on a thread pool) as long as the recursion depth is less than MAX_DEPTH. If the executor has
-   * recursed too deeply, it will instead delegate to the {@link Task#BACKGROUND_EXECUTOR} in order
+   * recursed too deeply, it will instead delegate to the {@link com.haru.task.Task#BACKGROUND_EXECUTOR} in order
    * to trim the stack.
    */
   private static class ImmediateExecutor implements Executor {

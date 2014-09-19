@@ -7,7 +7,7 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  *
  */
-package com.haru.internal;
+package com.haru.task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +31,7 @@ public class Task<TResult> {
 
     /**
      * An {@link java.util.concurrent.Executor} that executes tasks in the current thread unless
-     * the stack runs too deep, at which point it will delegate to {@link com.haru.internal.Task#BACKGROUND_EXECUTOR} in
+     * the stack runs too deep, at which point it will delegate to {@link com.haru.task.Task#BACKGROUND_EXECUTOR} in
      * order to trim the stack.
      */
     private static final Executor IMMEDIATE_EXECUTOR = BoltsExecutors.immediate();

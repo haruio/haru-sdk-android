@@ -1,12 +1,6 @@
 package com.haru.write;
 
 import com.haru.Entity;
-import com.haru.Haru;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 
 public class CreateEntityOperation extends Operation<Entity> {
 
@@ -17,5 +11,10 @@ public class CreateEntityOperation extends Operation<Entity> {
     @Override
     public String getMethod() {
         return "createEntity";
+    }
+
+    @Override
+    public void mergeFromPrevious(Operation other) {
+        this.objects.addAll(other.objects);
     }
 }

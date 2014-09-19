@@ -7,11 +7,11 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  *
  */
-package com.haru.internal;
+package com.haru.task;
 
 /**
  * A function to be called after a task completes.
- * @see Task
+ * @see com.haru.task.Task
  */
 public interface Continuation<TTaskResult, TContinuationResult> {
   TContinuationResult then(Task<TTaskResult> task) throws Exception;

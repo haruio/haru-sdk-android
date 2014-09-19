@@ -1,20 +1,23 @@
 package com.haru;
 
 import com.haru.callback.SaveCallback;
-import com.haru.write.Operations;
-import com.haru.write.SetOperation;
-import com.haru.write.DeleteFieldOperation;
-import com.haru.write.Operation;
-import com.haru.write.UpdateFieldOperation;
+import com.haru.task.Continuation;
+import com.haru.task.Task;
+import com.haru.write.*;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Haru's read/writable object
+ */
 public class Entity implements Encodable {
 
     final Object lock = new Object();
@@ -33,7 +36,7 @@ public class Entity implements Encodable {
 
     // 서버로 보내질 Operation들이다.
     private LinkedList<Operation> operationQueue;
-    private HashMap<String, Operations> operationSet;
+    private OperationSet operationSet;
 
     private String className;
     private String entityId;
@@ -60,8 +63,20 @@ public class Entity implements Encodable {
         this.changedData = new HashMap();
         this.deletedFields = new ArrayList();
         this.operationQueue = new LinkedList<Operation>();
+        this.operationSet = new OperationSet();
 
         this.className = className;
+        addOperationToQueue(new CreateEntityOperation(this));
+    }
+
+    /**
+     * 엔티티를 서버 혹은 로컬에서 가져온다.
+     * @param entityId 가져오려는 엔티티의 ID
+     * @return 해당 엔티티
+     */
+    public static Entity findById(String entityId) {
+        // TODO: 이 함수를 작성하시오
+        return null;
     }
 
     /**
@@ -91,7 +106,7 @@ public class Entity implements Encodable {
             }
 
             // set operation : add to operation queue
-            operationQueue.addLast(new SetOperation(key, value));
+            addOperationToQueue(new SetOperation(key, value));
 
             // changed only in local
             changedData.put(key, value);
@@ -119,16 +134,14 @@ public class Entity implements Encodable {
                 changedData.remove(key);
             }
             deletedFields.add(key);
-            operationQueue.addLast(new DeleteFieldOperation(key));
+            addOperationToQueue(new DeleteFieldOperation(key));
         }
     }
 
     protected HashMap<String, Object> getCurrentEntityMap() {
-        synchronized (this.lock) {
-            HashMap<String, Object> currentData = new HashMap<String, Object>(entityData);
-            currentData.putAll(changedData);
-            return currentData;
-        }
+        HashMap<String, Object> currentData = new HashMap<String, Object>(entityData);
+        currentData.putAll(changedData);
+        return currentData;
     }
 
     /**
@@ -136,10 +149,7 @@ public class Entity implements Encodable {
      * @return Date
      */
     public Date getCreatedAt() {
-        synchronized (this.lock) {
-
-            return this.createdAt;
-        }
+        return this.createdAt;
     }
 
     /**
@@ -147,9 +157,7 @@ public class Entity implements Encodable {
      * @return Date
      */
     public Date getUpdatedAt() {
-        synchronized (this.lock) {
-            return this.updatedAt;
-        }
+        return this.updatedAt;
     }
 
     /**
@@ -157,6 +165,7 @@ public class Entity implements Encodable {
      */
     public void discardChanges() {
         synchronized (this.lock) {
+            operationSet.clear();
             operationQueue.clear();
             changedData.clear();
             deletedFields.clear();
@@ -166,49 +175,104 @@ public class Entity implements Encodable {
     /**
      * 변경 사항을 백그라운드에서 저장한다.
      */
-    public void saveInBackground() {
-        saveInBackground(null);
+    public Task saveInBackground() {
+        return saveInBackground(null);
     }
 
     /**
      * 변경 사항을 백그라운드에서 저장한다.
      * @param callback 작업 완료시 실행할 콜백
      */
-    public void saveInBackground(SaveCallback callback) {
-        synchronized (this.lock) {
-            mergeOperations();
+    public Task saveInBackground(final SaveCallback callback) {
+        try {
+            // make request body
+            JSONArray operations = (JSONArray) Haru.encode(operationSet);
+            JSONObject request = new JSONObject();
+            request.put("requests", operations);
 
-    gfgrtfdfredrnhnyu
+            System.out.println(request.toString());
+
+            Task<HaruResponse> task = Haru.newWriteRequest("/batch")
+                    .post(request)
+                    .executeAsync();
+
+            return task.continueWith(new Continuation<HaruResponse, Entity>() {
+                @Override
+                public Entity then(Task<HaruResponse> task) throws Exception {
+                    HaruResponse response = task.getResult();
+                    if (response.getStatusCode() != 200) {
+                        callback.done(new HaruException(500, "Internal Server Error"));
+                    }
+
+                    // Clear queues and merge changedData
+                    changedData.putAll(entityData);
+                    discardChanges();
+
+                    // Fetch some information
+                    entityId = (String) response.getJsonBody().get("objectId");
+                    createdAt = new Date((Long) response.getJsonBody().get("createAt"));
+                    updatedAt = new Date((Long) response.getJsonBody().get("updateAt"));
+
+                    callback.done(null);
+                    return Entity.this;
+                }
+            });
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
         }
     }
 
     private void addOperationToQueue(Operation operation) {
+        String method = operation.getMethod();
 
-    }
+        if (operation instanceof DeleteFieldOperation && operationSet.containsKey("set")) {
+            SetOperation setOperations = (SetOperation) operationSet.get("set");
+            setOperations.removeOperationByKey(((DeleteFieldOperation) operation).getOriginalValue());
 
-    private void mergeOperations() {
-        Iterator<Operation> iterator = operationQueue.iterator();
-        while (iterator.hasNext()) {
-            Operation operation = iterator.next();
-            // TODO : merge operations
         }
+        if (operationSet.get(method) == null) {
+            operationSet.put(operation.getMethod(), operation);
+
+        } else {
+            operationSet.get(operation.getMethod()).mergeFromPrevious(operation);
+        }
+
+        // add to operation queue
+        operationQueue.addLast(operation);
     }
 
     /**
-     * 서버로부터
+     * 서버로부터 정보를 백그라운드에서 업데이트해온다.
+     * 모든 변경사항은 소실된다.
      */
-    public void fetch() {
+    public Task fetchInBackground() {
+        if (isNewEntity()) {
+            throw new IllegalStateException("You need to save the object before fetch it");
+        }
+        discardChanges();
 
+        Task<HaruResponse> fetchTask = Haru.newApiRequest("/classes/" + className + "/" + entityId).executeAsync();
+        return fetchTask.continueWith(new Continuation<HaruResponse, Entity>() {
+            @Override
+            public Entity then(Task<HaruResponse> task) throws Exception {
+                HaruResponse response = task.getResult();
+                if (response.hasApiError()) {
+                    throw response.getApiError();
+                }
+
+                entityData = Haru.convertJsonToMap(response.getJsonBody());
+                return Entity.this;
+            }
+        });
     }
 
     /**
      * Entity를 JSON 형태로 인코딩한다.
-     * @return
-     * @throws Exception
      */
     @Override
     public Object encode() {
-
-        return null;
+        // TODO: Nested Object에 대한 처리를 하시오.
+        HashMap<String, Object> entityMap = getCurrentEntityMap();
+        return new JSONObject(entityMap);
     }
 }

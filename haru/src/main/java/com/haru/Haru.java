@@ -20,6 +20,7 @@ public class Haru {
     private static String apiServer = "http://stage.haru.io:10100/1";
     private static String writeServer = "http://stage.haru.io:10200/1";
     private static String mqttPushServer = "http://stage.haru.io:10300";
+    private static String userServer = "http://stage.haru.io:10400/1";
 
     private static String mAppKey;
     private static String mSdkKey;
@@ -43,6 +44,8 @@ public class Haru {
 
         HaruRequest.initialize(context);
         Installation.init(context);
+
+        Log.e("Haru", "Device Token ==> " + Installation.getCurrentInstallation().getString("deviceToken"));
 
         // 서버 주소를 받아온다.
         try {
@@ -86,6 +89,10 @@ public class Haru {
 
     public static HaruRequest newPushRequest(String url) {
         return new HaruRequest(urlJoin(mqttPushServer, url));
+    }
+
+    public static HaruRequest newUserRequest(String url) {
+        return new HaruRequest(urlJoin(userServer, url));
     }
 
     private static boolean isEncodable(Object o) {

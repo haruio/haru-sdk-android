@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.PowerManager;
@@ -291,6 +292,8 @@ public class MqttPushRoute implements MqttSimpleCallback {
         if (pingSender == null) {
             pingSender = new PingSender();
             service.registerReceiver(pingSender, new IntentFilter(PushService.ACTION_PUSH_PING));
+
+            Log.i("Haru", "Push ==> registered");
         }
     }
 
@@ -374,7 +377,11 @@ public class MqttPushRoute implements MqttSimpleCallback {
     /*
      *   callback - called when we receive a message from the server
      */
+    @Override
     public void publishArrived(String topic, byte[] payloadbytes, int qos, boolean retained) {
+
+        Log.i("Haru", "Push ==> arrived something! " + topic);
+
         // we protect against the phone switching off while we're doing this
         //  by requesting a wake lock - we request the minimum possible wake
         //  lock - just enough to keep the CPU running until we've finished
@@ -429,8 +436,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
      */
     private void defineConnectionToBroker(String brokerHostName) {
         String mqttConnSpec = "tcp://" + brokerHostName + "@" + brokerPortNumber;
-
-        Log.d("Haru", brokerHostName);
+        Log.i("Haru", mqttConnSpec);
 
         try {
             // define the connection to the broker
@@ -463,7 +469,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
             // try to connect
             mqttClient.connect(generateClientId(), cleanStart, keepAliveSeconds);
 
-            //
             // inform the app that the app has successfully connected
             broadcastServiceStatus("Connected");
 
@@ -711,6 +716,9 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
             try {
                 mqttClient.ping();
+
+                Log.i("Haru", "Push ==> ping()");
+
             } catch (MqttException e) {
                 // if something goes wrong, it should result in connectionLost
                 //  being called, so we will handle it there
@@ -863,20 +871,20 @@ public class MqttPushRoute implements MqttSimpleCallback {
     //  the app Activity UI isn't running
 
     private void notifyUser(String alert, String title, String body) {
-/*        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        Notification notification = new Notification(R.drawable.ic_launcher, alert,
+        NotificationManager nm = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notification = new Notification(service.getApplicationInfo().icon, alert,
                 System.currentTimeMillis());
         notification.defaults |= Notification.DEFAULT_LIGHTS;
         notification.defaults |= Notification.DEFAULT_SOUND;
         notification.defaults |= Notification.DEFAULT_VIBRATE;
         notification.flags |= Notification.FLAG_AUTO_CANCEL;
         notification.ledARGB = Color.MAGENTA;
-        Intent notificationIntent = new Intent(this, MyActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+        Intent notificationIntent = new Intent("com.asdf");
+        PendingIntent contentIntent = PendingIntent.getActivity(service, 0,
                 notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        notification.setLatestEventInfo(this, title, body, contentIntent);
-        nm.notify(MQTT_NOTIFICATION_UPDATE, notification);*/
+        notification.setLatestEventInfo(service, title, body, contentIntent);
+        nm.notify(3, notification);
     }
 
 }

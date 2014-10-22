@@ -3,6 +3,7 @@ package com.haru.test;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,7 @@ import com.haru.callback.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -86,6 +88,7 @@ public class MainActivity extends ActionBarActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
+
             Entity.where("TestArticle").findAll(new FindCallback() {
                 @Override
                 public void done(List<Entity> findResult, HaruException error) {
@@ -96,6 +99,7 @@ public class MainActivity extends ActionBarActivity {
                     }
                     articles.clear();
                     articles.addAll(findResult);
+                    Log.e("Haru", "MainActivity : Results : " + String.valueOf(findResult.size()));
                     adpater.notifyDataSetChanged();
                 }
             });
@@ -136,7 +140,8 @@ public class MainActivity extends ActionBarActivity {
                 view = inflater.inflate(R.layout.elem, null, false);
             }
             Entity article = articles.get(i);
-            ((TextView) view.findViewById(R.id.listTitle)).setText(article.getString("title"));
+            Log.d("Haru", String.valueOf(article.get("title")));
+            ((TextView) view.findViewById(R.id.listTitle)).setText((String) article.get("title"));
             return view;
         }
     }
@@ -181,6 +186,21 @@ public class MainActivity extends ActionBarActivity {
                                         return;
                                     }
                                     toast("저장된 메모 : " + entity.getId());
+
+                                    Entity.where("TestArticle").findAll(new FindCallback() {
+                                        @Override
+                                        public void done(List<Entity> findResult, HaruException error) {
+                                            if (error != null) {
+                                                Log.d("HaruTest", error.getMessage());
+                                                toast(error.getMessage());
+                                                return;
+                                            }
+                                            articles.clear();
+                                            articles.addAll(findResult);
+                                            adpater.notifyDataSetChanged();
+                                        }
+                                    });
+
                                 }
                             });
                         }

@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.haru.Haru;
+import com.haru.Installation;
 import com.haru.PushService;
 import com.haru.Query;
 import com.haru.task.Task;
@@ -58,9 +59,9 @@ public class Push implements Parcelable {
      * @param channel 수신할 채널 이름
      */
     public static void subscribe(String channel) {
-        Intent intent = new Intent(PushService.ACTION_SUBSCRIBE_INTENT);
-        intent.putExtra(PushService.CHANNEL_INTENT_EXTRA, channel);
-        staticContext.sendBroadcast(intent);
+        Installation currentInstallation = Installation.getCurrentInstallation();
+        currentInstallation.addChannel(channel);
+        currentInstallation.saveInBackground();
     }
 
     /**

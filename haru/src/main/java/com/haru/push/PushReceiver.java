@@ -11,7 +11,7 @@ import com.haru.PushService;
 /**
  * Push를 수신받는 리시버이다.
  */
-public abstract class PushReceiver extends BroadcastReceiver {
+public class PushReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
@@ -42,9 +42,13 @@ public abstract class PushReceiver extends BroadcastReceiver {
         }
     }
 
-    public abstract void onPush(Context context, Push push);
+    public void onPush(Context context, Push push) {
 
-    public abstract void onMessage(Context context, Push push);
+    }
+
+    public void onMessage(Context context, Push push) {
+
+    }
 
     public Notification onNotification(Context context, Push push) {
         Notification noti =

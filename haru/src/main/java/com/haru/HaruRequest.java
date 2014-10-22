@@ -28,6 +28,7 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -37,6 +38,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -80,6 +82,10 @@ public class HaruRequest {
 
         public void put(String key, long value) {
             put(key, String.valueOf(value));
+        }
+
+        public void put(String key, List<String> value) {
+            put(key, new JSONArray(value).toString());
         }
 
         /**
@@ -184,6 +190,7 @@ public class HaruRequest {
                         break;
 
                     case 1: // POST
+                        Log.d("Haru", "Request => " + param.toString());
                         request = new HttpPost(endpoint);
                         ((HttpPost) request).setEntity(new StringEntity(param.toString(), "utf-8"));
                         break;
@@ -215,6 +222,7 @@ public class HaruRequest {
 
                     // Read the response
                     String body = EntityUtils.toString(response.getEntity(), "utf-8");
+                    Log.d("Haru", "Response => " + body);
                     return new HaruResponse(response, new JSONObject(body));
 
                 } catch (IOException e) {

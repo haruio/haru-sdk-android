@@ -30,26 +30,6 @@ public class PushService extends Service {
 
     private MqttPushRoute mqttPushRoute;
 
-    /**
-     * SUBSCRIBE / UNSUBSCRIBE 인텐트를 받는다.
-     */
-    private class SubscriptionReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String channel = intent.getStringExtra(CHANNEL_INTENT_EXTRA);
-
-            if (ACTION_SUBSCRIBE_INTENT.equals(intent.getAction())) {
-                // subscribe
-                Log.e("Haru", "Subscribing to topic : " + channel);
-                mqttPushRoute.subscribeToTopic(channel);
-
-            } else if (ACTION_UNSUBSCRIBE_INTENT.equals(intent.getAction())) {
-
-            }
-        }
-    }
-
-    private SubscriptionReceiver subscriptionReceiver = new SubscriptionReceiver();
 
     /**
      * 서비스가 켜져있지 않을 시 서비스를 시작시킨다.
@@ -91,9 +71,6 @@ public class PushService extends Service {
 
         // Sub / Unsub 브로드캐스트 리시버 등록
         Log.e("Haru", "Push service started!");
-        IntentFilter filter = new IntentFilter(ACTION_SUBSCRIBE_INTENT);
-        filter.addAction(ACTION_UNSUBSCRIBE_INTENT);
-        registerReceiver(subscriptionReceiver, filter);
     }
 
 
@@ -120,7 +97,6 @@ public class PushService extends Service {
     public void onDestroy() {
         super.onDestroy();
         mqttPushRoute.serviceDestroyed();
-        unregisterReceiver(subscriptionReceiver);
     }
 
     @Override

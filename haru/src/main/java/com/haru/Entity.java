@@ -1,5 +1,7 @@
 package com.haru;
 
+import android.util.Log;
+
 import com.haru.callback.DeleteCallback;
 import com.haru.callback.GetCallback;
 import com.haru.callback.SaveCallback;
@@ -265,9 +267,13 @@ public class Entity implements Encodable {
                 .post((JSONObject) this.encode())
                 .executeAsync();
 
+        Log.e("Haru", "createEntity() -> ");
+
         return creationTask.continueWith(new Continuation<HaruResponse, Entity>() {
             @Override
             public Entity then(Task<HaruResponse> task) throws Exception {
+
+                Log.e("Haru", " | continueWith()");
 
                 if (task.isFaulted()) {
                     // Exception
@@ -288,8 +294,8 @@ public class Entity implements Encodable {
 
                 // Fetch some information
                 entityId = (String) response.getJsonBody().get("_id");
-                createdAt = parseDate(response.getJsonBody().getString("createAt"));
-                updatedAt = parseDate(response.getJsonBody().getString("updateAt"));
+                createdAt = parseDate(response.getJsonBody().getString("createdAt"));
+                updatedAt = parseDate(response.getJsonBody().getString("updatedAt"));
 
                 callback.done(null);
 
@@ -404,12 +410,12 @@ public class Entity implements Encodable {
 
                 // Fetch some information
                 entityData = Haru.convertJsonToMap(response.getJsonBody());
-                createdAt = parseDate(response.getJsonBody().getString("createAt"));
-                updatedAt = parseDate(response.getJsonBody().getString("updateAt"));
+                createdAt = parseDate(response.getJsonBody().getString("createdAt"));
+                updatedAt = parseDate(response.getJsonBody().getString("updatedAt"));
 
-                // Exclude duplicated createAt, updateAt, _id from entityData
-                entityData.remove("createAt");
-                entityData.remove("updateAt");
+                // Exclude duplicated createdAt, updatedAt, _id from entityData
+                entityData.remove("createdAt");
+                entityData.remove("updatedAt");
                 entityData.remove("_id");
 
                 return Entity.this;
@@ -459,8 +465,8 @@ public class Entity implements Encodable {
         Entity entity = new Entity(className);
         entity.entityData = Haru.convertJsonToMap(json);
         entity.entityId = json.getString("_id");
-        entity.createdAt = parseDate(json.getString("createAt"));
-        entity.updatedAt = parseDate(json.getString("updateAt"));
+        entity.createdAt = parseDate(json.getString("createdAt"));
+        entity.updatedAt = parseDate(json.getString("updatedAt"));
         return entity;
     }
 

@@ -23,7 +23,14 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.haru.PushService" />
+        <service android:name="com.haru.PushService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver android:name="com.haru.push.PushReceiver"
+            android:enabled="true"
+            android:exported="true" />
+
     </application>
 
 </manifest>

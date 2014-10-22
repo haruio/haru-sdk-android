@@ -268,7 +268,7 @@ public class Query {
                 // re-encode results(in JSON format) to Entity Object
                 ArrayList<Entity> findResult = new ArrayList<Entity>();
                 JSONArray array = response.getJsonBody().getJSONArray("results");
-                for (int i=1;i<array.length();i++) {
+                for (int i=0;i<array.length();i++) {
                     findResult.add(Entity.fromJSON(className, array.getJSONObject(i)));
                 }
 

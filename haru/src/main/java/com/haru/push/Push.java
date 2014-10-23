@@ -99,7 +99,9 @@ public class Push implements Parcelable {
     public void writeToParcel(Parcel out, int i) {
         out.writeInt(type);
         out.writeStringList(channels);
-        out.writeString(extras.toString());
+        if (extras != null) {
+            out.writeString(extras.toString());
+        }
         out.writeString(title);
         out.writeString(message);
         out.writeString(query);

@@ -85,6 +85,8 @@ public class Installation extends Entity {
         HaruRequest.Param param = new HaruRequest.Param();
         param.put("deviceType", getString("deviceType"));
         param.put("deviceToken", getString("deviceToken"));
+        param.put("pushType", getString("pushType"));
+
         param.put("channels", channels);
 
         // 일단은 무조건 생성

@@ -1,0 +1,36 @@
+apply plugin: 'com.android.library'
+
+project.group = 'com.kakao.sdk'
+
+dependencies {
+    compile 'com.android.support:support-v4:20.0.+'
+    compile 'com.google.android.gms:play-services:+'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+android {
+    compileSdkVersion 18
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        applicationId "com.kakao.sdk"
+        minSdkVersion 9
+        targetSdkVersion 18
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java.srcDirs = ['src']
+            res.srcDirs = ['res']
+        }
+    }
+}
+

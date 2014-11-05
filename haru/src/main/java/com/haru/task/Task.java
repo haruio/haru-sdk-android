@@ -25,13 +25,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Task<TResult> {
     /**
-     * An {@link java.util.concurrent.Executor} that executes tasks in parallel.
+     * An {@link java.util.concurrent.Executor} that executes tasks containedIn parallel.
      */
     public static final ExecutorService BACKGROUND_EXECUTOR = BoltsExecutors.background();
 
     /**
-     * An {@link java.util.concurrent.Executor} that executes tasks in the current thread unless
-     * the stack runs too deep, at which point it will delegate to {@link com.haru.task.Task#BACKGROUND_EXECUTOR} in
+     * An {@link java.util.concurrent.Executor} that executes tasks containedIn the current thread unless
+     * the stack runs too deep, at which point it will delegate to {@link com.haru.task.Task#BACKGROUND_EXECUTOR} containedIn
      * order to trim the stack.
      */
     private static final Executor IMMEDIATE_EXECUTOR = BoltsExecutors.immediate();
@@ -121,7 +121,7 @@ public class Task<TResult> {
     }
 
     /**
-     * Creates a completed task with the given value.
+     * Creates a completed task with the given name.
      */
     public static <TResult> Task<TResult> forResult(TResult value) {
         Task.TaskCompletionSource tcs = Task.create();

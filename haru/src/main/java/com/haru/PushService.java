@@ -24,12 +24,7 @@ public class PushService extends Service {
     // constant used internally to schedule the next ping event
     public static final String ACTION_PUSH_PING = "com.haru.PUSH_PING";
 
-    public static final String ACTION_SUBSCRIBE_INTENT = "com.haru.SUBSCRIBE";
-    public static final String ACTION_UNSUBSCRIBE_INTENT = "com.haru.UNSUBSCRIBE";
-    public static final String CHANNEL_INTENT_EXTRA = "intent.extra.channel";
-
     private MqttPushRoute mqttPushRoute;
-
 
     /**
      * 서비스가 켜져있지 않을 시 서비스를 시작시킨다.
@@ -70,7 +65,7 @@ public class PushService extends Service {
         }, "MQTTservice").start();
 
         // Sub / Unsub 브로드캐스트 리시버 등록
-        Log.e("Haru", "Push service started!");
+        Log.i("Haru", "Push service started!");
     }
 
 

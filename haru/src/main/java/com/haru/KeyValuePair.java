@@ -3,7 +3,7 @@ package com.haru;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class KeyValuePair implements Encodable {
+public class KeyValuePair implements JsonEncodable {
     private String key;
     private Object value;
 
@@ -21,7 +21,7 @@ public class KeyValuePair implements Encodable {
     }
 
     @Override
-    public Object encode() throws JSONException {
+    public Object toJson() throws JSONException {
         JSONObject object = new JSONObject();
         object.put(key, value);
         return object;

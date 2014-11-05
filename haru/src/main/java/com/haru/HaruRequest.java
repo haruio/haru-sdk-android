@@ -1,10 +1,14 @@
 package com.haru;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
 import com.haru.callback.ResponseCallback;
+import com.haru.mime.MultipartEntity;
+import com.haru.mime.ProgressOutputStream;
+import com.haru.mime.content.FileBody;
 import com.haru.task.Continuation;
 import com.haru.task.Task;
 
@@ -27,14 +31,19 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +52,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class HaruRequest {
+
+    private static final String USER_AGENT = "Haru SDK " + Haru.getSdkVersion()
+            + " / Android " + Build.VERSION.RELEASE;
 
     private static HttpClient defaultClient;
     private static String appKey, sdkKey;
@@ -53,6 +65,9 @@ public class HaruRequest {
     private int method;
     private JSONObject param;
     private Param getParam;
+
+    private File file;
+    private ProgressOutputStream.ProgressListener progressListener;
 
     /**
      * POST, PUT, DELETE 메서드의 파라미터를 작성할 때 사용된다.
@@ -97,7 +112,7 @@ public class HaruRequest {
         }
 
         /**
-         * 파라미터들을 URL Encoding된 포맷으로 변환한다. (param1=value&param2=value)
+         * 파라미터들을 URL Encoding된 포맷으로 변환한다. (param1=name&param2=name)
          * @return String (URL Encoded UTF-8)
          */
         String toUrl() {
@@ -107,7 +122,7 @@ public class HaruRequest {
                 while (iter.hasNext()) {
                     Map.Entry entry = (Map.Entry) iter.next();
                     query.append(entry.getKey() + "="
-                            + URLEncoder.encode((String) entry.getValue(), "utf-8"));
+                            + URLEncoder.encode((String) entry.getValue(), "utf-8") + "&");
                 }
                 return query.toString();
 
@@ -143,6 +158,8 @@ public class HaruRequest {
         HttpConnectionParams.setSocketBufferSize(params, 8192);
         HttpClientParams.setRedirecting(params, false);
 
+        HttpProtocolParams.setUserAgent(params, USER_AGENT);
+
         ConnManagerParams.setMaxConnectionsPerRoute(params, new ConnPerRouteBean(20));
         ConnManagerParams.setMaxTotalConnections(params, 20);
 
@@ -156,6 +173,10 @@ public class HaruRequest {
 
         return new DefaultHttpClient(new ThreadSafeClientConnManager(params,
                 new DefaultHttpClient().getConnectionManager().getSchemeRegistry()), params);
+    }
+
+    public static HttpClient getDefaultHttpClient() {
+        return defaultClient;
     }
 
     public HaruRequest() {
@@ -175,7 +196,8 @@ public class HaruRequest {
      * @return {@link com.haru.task.Task}
      */
     public Task<HaruResponse> executeAsync() {
-        return Task.call(new Callable<HaruResponse>() {
+
+        return Task.callInBackground(new Callable<HaruResponse>() {
             @Override
             public HaruResponse call() throws Exception {
                 HttpUriRequest request;
@@ -185,14 +207,27 @@ public class HaruRequest {
                     case 0: // GET
                         String url = endpoint;
                         if (getParam != null) url += "?" + getParam.toUrl();
-                        Log.e("Haru", url);
+                        Log.d("Haru", "Requests => " + url);
                         request = new HttpGet(url);
                         break;
 
                     case 1: // POST
                         Log.d("Haru", "Request => " + param.toString());
                         request = new HttpPost(endpoint);
-                        ((HttpPost) request).setEntity(new StringEntity(param.toString(), "utf-8"));
+
+                        // Multipart Upload인가?
+                        if (file != null) {
+                            MultipartEntity multipart = new MultipartEntity();
+                            multipart.addPart(file.getName(), new FileBody(file));
+
+                            // Progress Callback 설정
+                            if (progressListener != null) multipart.setProgressListener(progressListener);
+
+                            ((HttpPost) request).setEntity(multipart);
+
+                        } else {
+                            ((HttpPost) request).setEntity(new StringEntity(param.toString(), "utf-8"));
+                        }
                         break;
 
                     case 2: // PUT
@@ -208,36 +243,37 @@ public class HaruRequest {
                         throw new RuntimeException("method " + method + " does not exist!");
                 }
 
-                try {
-                    // Sending JSON Data
+                // Haru API Header
+                request.setHeader("Application-Id", appKey);
+                request.setHeader("Android-API-Id", sdkKey);
+
+                if (file == null) {
+                    // Sending Standard JSON Requests
                     request.setHeader("Accept", "application/json");
                     request.setHeader("Accept-Encoding", "utf-8");
                     request.setHeader("Content-Type", "application/json");
-
-                    // Haru API Header
-                    request.setHeader("Application-Id", appKey);
-                    request.setHeader("Android-API-Id", sdkKey);
-
-                    HttpResponse response = client.execute(request);
-
-                    // Read the response
-                    String body = EntityUtils.toString(response.getEntity(), "utf-8");
-                    Log.d("Haru", "Response => " + body);
-                    return new HaruResponse(response, new JSONObject(body));
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new HaruException("I/O Error", e);
                 }
 
+                // Session Token
+                if (User.getCurrentSessionToken() != null) {
+                    request.setHeader("Session-Token", User.getCurrentSessionToken());
+                }
+
+                HttpResponse response = client.execute(request);
+
+                // Read the response
+                String body = EntityUtils.toString(response.getEntity(), "utf-8");
+                Log.d("Haru", "Response => " + body);
+
+                return new HaruResponse(response, new JSONObject(body));
+
             }
-        }, Task.BACKGROUND_EXECUTOR).continueWith(new Continuation<HaruResponse, HaruResponse>() {
+        }).continueWith(new Continuation<HaruResponse, HaruResponse>() {
             @Override
             public HaruResponse then(Task<HaruResponse> task) throws Exception {
                 if (task.isFaulted()) {
-                    Exception error = task.getError();
-                    error.printStackTrace(); // TODO: Debug
-                    throw error;
+                    Haru.stackTrace(task.getError());
+                    throw task.getError();
 
                 } else if (task.isCompleted()) {
                     return task.getResult();
@@ -283,6 +319,15 @@ public class HaruRequest {
         return this;
     }
 
+    public HaruRequest post(File file) {
+        this.file = file;
+        return this;
+    }
+
+    public HaruRequest fileProgress(ProgressOutputStream.ProgressListener listener) {
+        this.progressListener = listener;
+        return this;
+    }
 
     public HaruRequest put(Param param) {
         setMethod(2); // PUT

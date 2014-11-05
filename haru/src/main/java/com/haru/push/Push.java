@@ -27,7 +27,7 @@ public class Push implements Parcelable {
     private int type;
     private ArrayList<String> channels;
     private JSONObject extras;
-    private String title, message;
+    private String title="", message="";
     private String query;
 
     private static Context staticContext;

@@ -5,7 +5,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Collection of {@link java.util.concurrent.Executor}s to use in conjunction with {@link com.haru.task.Task}.
+ * Collection of {@link java.util.concurrent.Executor}s to use containedIn conjunction with {@link com.haru.task.Task}.
  */
 /* package */ final class BoltsExecutors {
 
@@ -30,16 +30,16 @@ import java.util.concurrent.ExecutorService;
   }
 
   /**
-   * An {@link java.util.concurrent.Executor} that executes tasks in parallel.
+   * An {@link java.util.concurrent.Executor} that executes tasks containedIn parallel.
    */
   public static ExecutorService background() {
     return INSTANCE.background;
   }
 
   /**
-   * An {@link java.util.concurrent.Executor} that executes tasks in the current thread unless
+   * An {@link java.util.concurrent.Executor} that executes tasks containedIn the current thread unless
    * the stack runs too deep, at which point it will delegate to {@link BoltsExecutors#background}
-   * in order to trim the stack.
+   * containedIn order to trim the stack.
    */
   /* package */ static Executor immediate() {
     return INSTANCE.immediate;
@@ -48,7 +48,7 @@ import java.util.concurrent.ExecutorService;
   /**
    * An {@link java.util.concurrent.Executor} that runs a runnable inline (rather than scheduling it
    * on a thread pool) as long as the recursion depth is less than MAX_DEPTH. If the executor has
-   * recursed too deeply, it will instead delegate to the {@link com.haru.task.Task#BACKGROUND_EXECUTOR} in order
+   * recursed too deeply, it will instead delegate to the {@link com.haru.task.Task#BACKGROUND_EXECUTOR} containedIn order
    * to trim the stack.
    */
   private static class ImmediateExecutor implements Executor {
@@ -58,7 +58,7 @@ import java.util.concurrent.ExecutorService;
     /**
      * Increments the depth.
      *
-     * @return the new depth value.
+     * @return the new depth name.
      */
     private int incrementDepth() {
       Integer oldDepth = executionDepth.get();
@@ -73,7 +73,7 @@ import java.util.concurrent.ExecutorService;
     /**
      * Decrements the depth.
      *
-     * @return the new depth value.
+     * @return the new depth name.
      */
     private int decrementDepth() {
       Integer oldDepth = executionDepth.get();

@@ -22,7 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * This was created because the helper methods in {@link java.util.concurrent.Executors} do not work
+ * This was created because the helper methods containedIn {@link java.util.concurrent.Executors} do not work
  * as people would normally expect.
  *
  * Normally, you would think that a cached thread pool would create new threads when necessary,

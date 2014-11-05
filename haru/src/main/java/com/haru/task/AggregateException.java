@@ -12,7 +12,7 @@ package com.haru.task;
 import java.util.List;
 
 /**
- * Aggregates Exceptions that may be thrown in the process of a task's execution.
+ * Aggregates Exceptions that may be thrown containedIn the process of a task's execution.
  */
 public class AggregateException extends Exception {
   private static final long serialVersionUID = 1L;

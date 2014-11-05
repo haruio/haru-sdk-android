@@ -1,9 +1,6 @@
 package com.haru;
 
-import android.util.Log;
-
 import com.haru.callback.DeleteCallback;
-import com.haru.callback.GetCallback;
 import com.haru.callback.SaveCallback;
 import com.haru.task.Continuation;
 import com.haru.task.Task;
@@ -14,14 +11,16 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class Entity implements Encodable {
+/**
+ * Haru 서버에 저장되고, 로컬에 저장되는 데이터이다.
+ */
+public class Entity implements JsonEncodable {
 
     final Object lock = new Object();
 
-    private static final String TAG = "Haru.Entity";
     private static final String INHERITED = "__inherited";
 
-    private Map<String, Object> entityData;
+    protected Map<String, Object> entityData;
     private static boolean isSubclassed = false;
 
     // 아직 저장되지 않은, 수정된 데이터이다.
@@ -35,10 +34,13 @@ public class Entity implements Encodable {
     private LinkedList<Operation> operationQueue;
     private OperationSet operationSet;
 
-    private String className;
-    private String entityId;
-    private Date createdAt;
-    private Date updatedAt;
+    protected String className;
+    protected String entityId;
+    protected Date createdAt;
+    protected Date updatedAt;
+
+    private static HashMap<String, Class<? extends Entity>> subclassedEntityRepository
+            = new HashMap<String, Class<? extends Entity>>();
 
     private boolean isDeleted = false;
 
@@ -47,6 +49,64 @@ public class Entity implements Encodable {
      */
     protected Entity() {
         this(INHERITED);
+    }
+
+    /**
+     * Entity를 상속받아 새로운 클래스를 만들었을 경우, 해당 클래스를 등록한다.
+     * @param classObject 서브클래싱한 엔티티
+     */
+    public static void registerSubclass(Class<? extends Entity> classObject) {
+        subclassedEntityRepository.put(getClassName(classObject), classObject);
+    }
+
+    public static String getClassName(Class<? extends Entity> subclassedClass) {
+        String className;
+
+        // find class name
+        ClassNameOfEntity classNameAnnotation = subclassedClass.getAnnotation(ClassNameOfEntity.class);
+        if (classNameAnnotation == null || classNameAnnotation.value() == null) {
+            // use class name as entity className
+            className = subclassedClass.getSimpleName();
+
+        } else {
+            // from annotation (@ClassNameOfEntity(YET_ANOTHER_NAME))
+            className = classNameAnnotation.value();
+        }
+        return className;
+    }
+
+    /**
+     * Entity를 상속받고, Entity.registerSubclass로 등록한 클래스에 한하여,
+     * ClassName을 통하여 해당 클래스를 찾는다.
+     *
+     * @param className 클래스 이름 (등록된 이름)
+     */
+    protected static <T extends Entity> Class<T> findClassByName(String className) {
+        return (Class<T>) subclassedEntityRepository.get(className);
+    }
+
+    public static <T extends Entity> T create(Class<T> classObject) {
+        try {
+            return classObject.newInstance();
+
+        } catch (Exception e) {
+            if ((e instanceof RuntimeException)) {
+                throw ((RuntimeException) e);
+            }
+            throw new RuntimeException("Failed to create instance of subclass.", e);
+        }
+    }
+
+    public static <T extends Entity> T create(String className) {
+        try {
+            return (T) findClassByName(className).newInstance();
+
+        } catch (Exception e) {
+            if ((e instanceof RuntimeException)) {
+                throw ((RuntimeException) e);
+            }
+            throw new RuntimeException("Failed to create instance of subclass.", e);
+        }
     }
 
     public Entity(String className) {
@@ -74,7 +134,7 @@ public class Entity implements Encodable {
      * @param entityId 가져오려는 엔티티의 ID
      * @return 해당 엔티티
      */
-    public static Entity findById(String className, String entityId) {
+    public static final Entity retrieve(String className, String entityId) {
         try {
             final Entity entity = new Entity(className);
             entity.setEntityId(entityId);
@@ -90,22 +150,95 @@ public class Entity implements Encodable {
 
         } catch (InterruptedException e) {
             e.printStackTrace();
-            throw new RuntimeException("findById : fetch task has interrupted");
+            throw new RuntimeException("retrieve : fetch task has interrupted");
         }
     }
 
     /**
-     * 엔티티를 서버 혹은 로컬에서 가져온다.
+     * Entity를 서버에서 가져온다.
+     * 주의: Entity를 상속받은 Subclass에서만 쓰이는 메서드이다!
+     *
+     * @param entityClass Retrieve할 타입의 서브클래스
      * @param entityId 가져오려는 엔티티의 ID
      * @return 해당 엔티티
      */
-    public static Task retrieve(String className, String entityId, GetCallback callback) {
-        final Entity entity = new Entity(className);
-        entity.setEntityId(entityId);
-        return entity.fetchInBackground();
+    public static <T extends Entity> T retrieve(Class<T> entityClass, String entityId) {
+        try {
+            final T entity = entityClass.newInstance();
+            entity.setEntityId(entityId);
+
+            Task fetchTask = entity.fetchInBackground();
+            fetchTask.waitForCompletion();
+
+            if (fetchTask.getError() != null) {
+                HaruException exception = (HaruException) fetchTask.getError();
+                exception.printStackTrace();
+                throw new RuntimeException(exception);
+            }
+            return (T) fetchTask.getResult();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            throw new RuntimeException("retrieve : fetch task has interrupted.", e);
+
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException(
+                    "Class " + entityClass.getName() + " only has a private constructor.");
+
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Y");
+
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Class " + entityClass.getName() + " is not inherited Entity class!");
+        }
     }
 
-    private void setEntityId(String entityId) {
+    /**
+     * Entity를 서버에서 가져온다.
+     * 주의: Entity를 상속받은 Subclass에서만 쓰이는 메서드이다!
+     *
+     * @param entityClass Retrieve할 타입의 서브클래스
+     * @param entityId 가져오려는 엔티티의 ID
+     * @return 해당 엔티티
+     */
+    protected static <T extends Entity> Task<Entity> retrieveTask(Class<T> entityClass,
+                                                           String entityId) {
+        try {
+            final T entity = entityClass.newInstance();
+            entity.setEntityId(entityId);
+
+            return entity.fetchInBackground();
+
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            throw new RuntimeException(
+                    "Class " + entityClass.getName() + " only has a private constructor.");
+
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Y");
+
+        } catch (ClassCastException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Class " + entityClass.getName() + " is not inherited Entity class!");
+        }
+    }
+
+
+    /**
+     * Entity를 로컬 데이터스토어로부터 가져온다.
+     * @param entityId 가져오려는 엔티티의 ID
+     * @return 해당 엔티티
+     */
+    public static Entity retrieveFromLocal(String className, String entityId) {
+        return LocalEntityStore.retriveEntity(className, entityId);
+    }
+
+
+    protected void setEntityId(String entityId) {
         this.entityId = entityId;
     }
 
@@ -121,7 +254,8 @@ public class Entity implements Encodable {
 
     /**
      * 조건에 해당하는 엔티티를 검색한다.
-     * Entity를 상속받은 (Subclassed) 클래스에서만 호출 가능하다.
+     *
+     * Entity를 상속받은 (Subclassed) 클래스에서만 호출 가능하다!
      * Entity 클래스에선 Entity.where(String className)
      * @return
      */
@@ -161,7 +295,7 @@ public class Entity implements Encodable {
             // set operation : add to operation queue
             addOperationToQueue(new UpdateOperation(key, value));
 
-            // changed only in local
+            // changed only containedIn local
             changedData.put(key, value);
         }
     }
@@ -178,7 +312,7 @@ public class Entity implements Encodable {
     }
 
     public String getString(String key) {
-        return (String) get(key);
+        return String.valueOf(get(key));
     }
 
     /**
@@ -226,6 +360,14 @@ public class Entity implements Encodable {
     }
 
     /**
+     * 이 Entity의 클래스의 이름을 반환한다.
+     * @return Class Name (Collection)
+     */
+    public String getClassName() {
+        return this.className;
+    }
+
+    /**
      * 서버에 저장하지 않은 변경 사항들을 전부 되돌린다.
      */
     public void discardChanges() {
@@ -238,10 +380,21 @@ public class Entity implements Encodable {
     }
 
     /**
+     * 로컬 데이터스토어에 저장한다.
+     */
+    public void saveToLocal() {
+        LocalEntityStore.saveEntity(this, null);
+    }
+
+    /**
      * 변경 사항을 백그라운드에서 저장한다.
      */
     public Task saveInBackground() {
-        return saveInBackground(null);
+        // call with empty callback
+        return saveInBackground(new SaveCallback() {
+            @Override
+            public void done(HaruException exception) { }
+        });
     }
 
     /**
@@ -264,16 +417,12 @@ public class Entity implements Encodable {
      */
     private Task createEntity(final SaveCallback callback) {
         Task<HaruResponse> creationTask = Haru.newWriteRequest("/classes/" + className)
-                .post((JSONObject) this.encode())
+                .post((JSONObject) this.toJson())
                 .executeAsync();
-
-        Log.e("Haru", "createEntity() -> ");
 
         return creationTask.continueWith(new Continuation<HaruResponse, Entity>() {
             @Override
             public Entity then(Task<HaruResponse> task) throws Exception {
-
-                Log.e("Haru", " | continueWith()");
 
                 if (task.isFaulted()) {
                     // Exception
@@ -296,6 +445,9 @@ public class Entity implements Encodable {
                 entityId = (String) response.getJsonBody().get("_id");
                 createdAt = parseDate(response.getJsonBody().getString("createdAt"));
                 updatedAt = parseDate(response.getJsonBody().getString("updatedAt"));
+
+                entityData.put("createdAt", createdAt.getTime());
+                entityData.put("updatedAt", updatedAt.getTime());
 
                 callback.done(null);
 
@@ -345,6 +497,7 @@ public class Entity implements Encodable {
 
                 // Fetch some information
                 updatedAt = parseDate(response.getJsonBody().getString("updateAt"));
+                entityData.put("updatedAt", updatedAt.getTime());
 
                 if (callback != null) callback.done(null);
                 return Entity.this;
@@ -393,7 +546,7 @@ public class Entity implements Encodable {
      * 서버로부터 정보를 백그라운드에서 업데이트해온다.
      * 모든 변경사항은 소실된다.
      */
-    public Task fetchInBackground() {
+    public Task<Entity> fetchInBackground() {
         if (isNewEntity()) {
             throw new IllegalStateException("You need to save the object before you fetch it.");
         }
@@ -405,6 +558,7 @@ public class Entity implements Encodable {
             public Entity then(Task<HaruResponse> task) throws Exception {
                 HaruResponse response = task.getResult();
                 if (response.hasError()) {
+                    response.getError().printStackTrace();
                     throw response.getError();
                 }
 
@@ -413,9 +567,10 @@ public class Entity implements Encodable {
                 createdAt = parseDate(response.getJsonBody().getString("createdAt"));
                 updatedAt = parseDate(response.getJsonBody().getString("updatedAt"));
 
-                // Exclude duplicated createdAt, updatedAt, _id from entityData
-                entityData.remove("createdAt");
-                entityData.remove("updatedAt");
+                entityData.put("createdAt", createdAt.getTime());
+                entityData.put("updatedAt", updatedAt.getTime());
+
+                // Exclude duplicated _id from entityData
                 entityData.remove("_id");
 
                 return Entity.this;
@@ -458,13 +613,46 @@ public class Entity implements Encodable {
 
     /**
      * JSON을 Entity로 변환한다.
-     * @param json
-     * @return
+     * @param json JSON Packet
+     * @return 변환된 Entity
      */
-    static Entity fromJSON(String className, JSONObject json) throws Exception {
-        Entity entity = new Entity(className);
+    static <ENTITY extends Entity> ENTITY fromJson(Class<ENTITY> classObject,
+                                                   String className,
+                                                   JSONObject json) throws Exception {
+        ENTITY entity = classObject.newInstance();
+        entity.className = className;
         entity.entityData = Haru.convertJsonToMap(json);
         entity.entityId = json.getString("_id");
+        entity.createdAt = parseDate(json.getString("createdAt"));
+        entity.updatedAt = parseDate(json.getString("updatedAt"));
+        return entity;
+    }
+
+    /**
+     * JSON을 Entity로 변환한다.
+     * @param json JSON Packet
+     * @return 변환된 Entity
+     */
+    static <T extends Entity> T fromJson(Class<T> classObject, JSONObject json) throws Exception {
+        T entity = classObject.newInstance();
+        entity.entityData = Haru.convertJsonToMap(json);
+        entity.entityId = json.getString("_id");
+        entity.createdAt = parseDate(json.getString("createdAt"));
+        entity.updatedAt = parseDate(json.getString("updatedAt"));
+        return entity;
+    }
+
+
+    /**
+     * JSON을 Entity로 변환한다.
+     * @param json JSON Packet
+     * @param entityId 해당 엔티티의 ID
+     * @return 변환된 Entity
+     */
+    static <T extends Entity> T fromJsonToSubclass(Class<T> classObject, String entityId, JSONObject json) throws Exception {
+        T entity = classObject.newInstance();
+        entity.entityData = Haru.convertJsonToMap(json);
+        entity.entityId = entityId;
         entity.createdAt = parseDate(json.getString("createdAt"));
         entity.updatedAt = parseDate(json.getString("updatedAt"));
         return entity;
@@ -474,7 +662,7 @@ public class Entity implements Encodable {
      * Entity를 JSON 형태로 인코딩한다.
      */
     @Override
-    public Object encode() {
+    public Object toJson() {
         // TODO: Nested Object에 대한 처리를 하시오.
         HashMap<String, Object> entityMap = getCurrentEntityMap();
         return new JSONObject(entityMap);

@@ -1,10 +1,7 @@
 package com.haru;
 
-import android.util.Log;
-
 import com.haru.callback.FindCallback;
 import com.haru.callback.GetCallback;
-import com.haru.callback.ResponseCallback;
 import com.haru.task.Continuation;
 import com.haru.task.Task;
 
@@ -12,7 +9,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,14 +18,33 @@ public class Query {
      * Entity.where("User").group().greaterThan("10").or().ungroup());
      */
 
+    private Class<? extends Entity> classObject;
     private String className;
     private JSONObject mainQueryObject;
     private JSONObject currentScope;
 
+    private Query(Class<? extends Entity> subclassedClass) {
+        this.className = Entity.getClassName(subclassedClass);
+        this.classObject = subclassedClass;
+
+        mainQueryObject = new JSONObject();
+
+        // 현재 작업 범위 : 최상위 노드.
+        currentScope = mainQueryObject;
+    }
 
     private Query(String className) {
         this.className = className;
+        this.classObject = Entity.findClassByName(className);
+
+        if (classObject == null) {
+            // 서브클래싱 안된 클래스는 그냥 Entity.
+            classObject = Entity.class;
+        }
+
         mainQueryObject = new JSONObject();
+
+        // 현재 작업 범위 : 최상위 노드.
         currentScope = mainQueryObject;
     }
 
@@ -201,7 +216,7 @@ public class Query {
         return this;
     }
 
-    public Query in(String field, List<?> value) {
+    public Query containedIn(String field, List<?> value) {
         try {
             JSONObject inClause = new JSONObject();
             inClause.put("$in", value);
@@ -213,7 +228,7 @@ public class Query {
         return this;
     }
 
-    public Query notIn(String field, List<?> value) {
+    public Query notContainedIn(String field, List<?> value) {
         try {
             JSONObject ninClause = new JSONObject();
             ninClause.put("$nin", value);
@@ -265,11 +280,11 @@ public class Query {
                     throw response.getError();
                 }
 
-                // re-encode results(in JSON format) to Entity Object
+                // re-encode results(containedIn JSON format) to Entity Object
                 ArrayList<Entity> findResult = new ArrayList<Entity>();
                 JSONArray array = response.getJsonBody().getJSONArray("results");
                 for (int i=0;i<array.length();i++) {
-                    findResult.add(Entity.fromJSON(className, array.getJSONObject(i)));
+                    findResult.add(Entity.fromJson(classObject, className, array.getJSONObject(i)));
                 }
 
                 callback.done(findResult, null);
@@ -302,10 +317,10 @@ public class Query {
                     throw response.getError();
                 }
 
-                // re-encode results(in JSON format) to Entity Object
+                // re-encode results(containedIn JSON format) to Entity Object
                 JSONArray array = response.getJsonBody().getJSONArray("results");
 
-                callback.done(Entity.fromJSON(className, array.getJSONObject(0)), null);
+                callback.done(Entity.fromJson(classObject, className, array.getJSONObject(0)), null);
                 return null;
             }
         });

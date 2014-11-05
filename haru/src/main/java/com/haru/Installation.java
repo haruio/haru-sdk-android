@@ -1,38 +1,123 @@
 package com.haru;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.haru.task.Continuation;
-import com.haru.task.Task;
-
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.haru.callback.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 
-public class Installation extends Entity {
+@ClassNameOfEntity(Installation.CLASS_NAME)
+public final class Installation extends Entity {
+
+    public static final String CLASS_NAME = "Installations";
+    private static final String CURRENT_INSTALLATION_TAG = "__currentInstallation";
 
     private static String mUUID;
+    private static Context context;
     private static Installation currentInstallation;
 
-    // Non-static members
-    private ArrayList<String> channels;
+    /**
+     * Installation을 초기화하고, 현재 설치 정보를 구해온다.
+     * @param appContext Application Context {@link android.app.Application}
+     */
+    static void init(Context appContext) {
+        context = appContext;
 
-    public static void init(Context context) {
-        currentInstallation = new Installation();
-        currentInstallation.put("deviceType", "android");
-        currentInstallation.put("deviceToken", getUuid(context));
-        currentInstallation.put("pushType", "mqtt");
+        // check already have installation in local
+        ArrayList<Installation> entities =
+                LocalEntityStore.retrieveEntitiesByTag(CLASS_NAME, CURRENT_INSTALLATION_TAG);
 
-        // TODO: DEbug
-        currentInstallation.channels.add("testChannel");
+        if (entities == null || entities.size() == 0) {
+            // this is the first time.
+            currentInstallation = new Installation();
+            Log.i("Haru", "Making a new installation...");
+
+            // update and save
+            currentInstallation.fillInformation();
+            currentInstallation.saveInBackground(new SaveCallback() {
+                @Override
+                public void done(HaruException error) {
+                    if (error != null) {
+                        Log.e("Haru", "An error occured when saving installation first time : " + error.getMessage());
+                        error.printStackTrace();
+                        return;
+                    }
+
+                    // save in local
+                    LocalEntityStore.saveEntity(currentInstallation, CURRENT_INSTALLATION_TAG);
+                }
+            });
+
+        } else {
+            // use the old one.
+            currentInstallation = entities.get(0);
+            Log.i("Haru", "Installation already exists! id=" + currentInstallation.entityId);
+
+            // update and save
+//          currentInstallation.fillInformation();
+//          currentInstallation.saveInBackground();
+        }
     }
 
-    private static String getUuid(Context context) {
+    Installation() {
+        super(CLASS_NAME);
+    }
+
+    void fillInformation() {
+        put("deviceType", "android");
+        put("pushType", "mqtt");
+
+        updateTimezone();
+        updateVersionInfo();
+        updateUuid();
+    }
+
+    private void updateTimezone() {
+        String zone = TimeZone.getDefault().getID();
+        if (((zone.indexOf('/') > 0) || (zone.equals("GMT"))) && (!zone.equals(get("timeZone"))))
+            super.put("timeZone", zone);
+    }
+
+    private void updateVersionInfo() {
+        try {
+            String packageName = context.getPackageName();
+            PackageManager pm = context.getPackageManager();
+            PackageInfo pkgInfo = pm.getPackageInfo(packageName, 0);
+
+            String appName = pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString();
+            String appVersion = pkgInfo.versionName;
+
+            if ((packageName != null) && (!packageName.equals(get("appIdentifier")))) {
+                super.put("appIdentifier", packageName);
+            }
+            if ((appName != null) && (!appName.equals(get("appName")))) {
+                super.put("appName", appName);
+            }
+            if (((appVersion != null ? 1 : 0) & (!appVersion.equals(get("appVersion")) ? 1 : 0)) != 0)
+                super.put("appVersion", appVersion);
+
+            if (!Build.VERSION.RELEASE.equals(get("androidVersion"))) {
+                super.put("androidVersion", Build.VERSION.RELEASE);
+            }
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w("Haru", "Cannot load package information; will not saved in installation");
+        }
+
+        if (!Haru.getSdkVersion().equals(get("haruVersion")))
+            super.put("haruVersion", Haru.getSdkVersion());
+    }
+
+
+    public void updateUuid() {
         if (mUUID == null) {
             TelephonyManager tm =
                     (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
@@ -48,69 +133,30 @@ public class Installation extends Entity {
                     ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
             mUUID = deviceUuid.toString();
         }
-        return mUUID;
-    }
-
-    public static void saveCurrentInstallationInBackground() {
-        currentInstallation.saveInBackground();
+        put("deviceToken", mUUID);
     }
 
     public static Installation getCurrentInstallation() {
         return currentInstallation;
     }
 
-
-    public Installation() {
-        super();
-        channels = new ArrayList<String>();
-    }
-
     public void addChannel(String channel) {
+        ArrayList<String> channels = getChannels();
         channels.add(channel);
+        put("channels", channels);
     }
 
     public void addChannels(List<String> channels) {
-        channels.addAll(channels);
+        ArrayList<String> currentChannels = getChannels();
+        currentChannels.addAll(channels);
+        put("channels", currentChannels);
     }
 
     public void clearChannels() {
-        channels.clear();
+        put("channels", new ArrayList<String>());
     }
 
-    public List<String> getChannels() {
-        return channels;
+    public ArrayList<String> getChannels() {
+        return (ArrayList<String>) super.get("channels");
     }
-
-    public Task saveInBackground() {
-        HaruRequest.Param param = new HaruRequest.Param();
-        param.put("deviceType", getString("deviceType"));
-        param.put("deviceToken", getString("deviceToken"));
-        param.put("pushType", getString("pushType"));
-
-        param.put("channels", channels);
-
-        // 일단은 무조건 생성
-        Task<HaruResponse> newInstallationTask = Haru.newUserRequest("/installation")
-                .post(param)
-                .executeAsync();
-
-        return newInstallationTask.onSuccess(new Continuation<HaruResponse, Installation>() {
-            @Override
-            public Installation then(Task task) throws Exception {
-
-                HaruResponse response = (HaruResponse) task.getResult();
-                Log.e("Haru", "deviceUuid -> " + mUUID);
-                Log.e("Haru", "saveCurrentInstallationInBackground -> " + response.getJsonBody().toString());
-
-                return Installation.this;
-            }
-        }).continueWith(new Continuation<Installation, Installation>() {
-            @Override
-            public Installation then(Task task) throws Exception {
-                return Installation.this;
-            }
-        });
-    }
-
-
 }

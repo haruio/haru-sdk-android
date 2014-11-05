@@ -80,9 +80,9 @@ public class MqttPushRoute implements MqttSimpleCallback {
     //   it's a trade-off between how time-sensitive the data is that your
     //      app is handling, vs the acceptable impact on battery life
     //
-    //   it is perhaps also worth bearing in mind the network's support for
+    //   it is perhaps also worth bearing containedIn mind the network's support for
     //     long running, idle connections. Ideally, to keep a connection open
-    //     you want to use a keep alive value that is less than the period of
+    //     you want to use a keep alive name that is less than the period of
     //     time after which a network operator will kill an idle connection
     private short keepAliveSeconds = 20 * 60;
 
@@ -257,7 +257,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
                 if (connectToBroker()) {
                     // we subscribe to a topic - registering to receive push
                     //  notifications with a particular key
-                    // in a 'real' app, you might want to subscribe to multiple
+                    // containedIn a 'real' app, you might want to subscribe to multiple
                     //  topics - I'm just subscribing to one as an example
                     // note that this topicName could include a wildcard, so
                     //  even just with one subscription, we could receive
@@ -292,8 +292,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
         if (pingSender == null) {
             pingSender = new PingSender();
             service.registerReceiver(pingSender, new IntentFilter(PushService.ACTION_PUSH_PING));
-
-            Log.i("Haru", "Push ==> registered");
         }
     }
 
@@ -337,12 +335,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
             // inform the app that we are not connected any more
             broadcastServiceStatus("Connection lost - no network connection");
-
-            //
-            // inform the user (for times when the Activity UI isn't running)
-            //   that we are no longer able to receive messages
-            notifyUser("Connection lost - no network connection",
-                    "MQTT", "Connection lost - no network connection");
 
             //
             // wait until the phone has a network connection again, when we
@@ -400,17 +392,12 @@ public class MqttPushRoute implements MqttSimpleCallback {
         //  for times when the app's Activity UI is not running, the Service
         //   will need to safely store the data that it receives
         if (addReceivedMessageToStore(topic, messageBody)) {
-            // this is a new message - a value we haven't seen before
+            // this is a new message - a name we haven't seen before
 
             //
             // inform the app (for times when the Activity UI is running) of the
             //   received message so the app UI can be updated with the new data
             broadcastReceivedMessage(topic, messageBody);
-
-            //
-            // inform the user (for times when the Activity UI isn't running)
-            //   that there is new data available
-            notifyUser("New data received", topic, messageBody);
         }
 
         // receiving this message will have kept the connection alive for us, so
@@ -436,7 +423,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
      */
     private void defineConnectionToBroker(String brokerHostName) {
         String mqttConnSpec = "tcp://" + brokerHostName + "@" + brokerPortNumber;
-        Log.i("Haru", mqttConnSpec);
 
         try {
             // define the connection to the broker
@@ -453,11 +439,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
             // inform the app that we failed to connect so that it can update
             //  the UI accordingly
             broadcastServiceStatus("Invalid connection parameters");
-
-            //
-            // inform the user (for times when the Activity UI isn't running)
-            //   that we failed to connect
-            notifyUser("Unable to connect", "MQTT", "Unable to connect");
         }
     }
 
@@ -491,13 +472,9 @@ public class MqttPushRoute implements MqttSimpleCallback {
             //  the UI accordingly
             broadcastServiceStatus("Unable to connect");
 
-            // inform the user (for times when the Activity UI isn't running)
-            //   that we failed to connect
-            notifyUser("Unable to connect", "MQTT", "Unable to connect - will retry later");
-
             // if something has failed, we wait for one keep-alive period before
             //   trying again
-            // in a real implementation, you would probably want to keep count
+            // containedIn a real implementation, you would probably want to keep count
             //  of how many times you attempt this, and stop trying after a
             //  certain number, or length of time - rather than keep trying
             //  forever.
@@ -541,10 +518,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
             // inform the app of the failure to subscribe so that the UI can
             //  display an error
             broadcastServiceStatus("Unable to subscribe");
-
-            //
-            // inform the user (for times when the Activity UI isn't running)
-            notifyUser("Unable to subscribe", "MQTT", "Unable to subscribe");
         }
     }
 
@@ -605,7 +578,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
             ConnectivityManager cm = (ConnectivityManager) service.getSystemService(Context.CONNECTIVITY_SERVICE);
             if (cm.getBackgroundDataSetting()) {
                 // user has allowed background data - we start again - picking
-                //  up where we left off in handleStart before
+                //  up where we left off containedIn handleStart before
                 defineConnectionToBroker(brokerHostName);
                 handleStart(intent, 0);
             } else {
@@ -627,7 +600,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
 
     /*
-     * Called in response to a change in network connection - after losing a
+     * Called containedIn response to a change containedIn network connection - after losing a
      *  connection to the server, this allows us to wait until we have a usable
      *  data connection again
      */
@@ -675,7 +648,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         //   handled for us.
         // Note that this may be called multiple times before the next scheduled
         //   ping has fired. This is good - the previously scheduled one will be
-        //   cancelled in favour of this one.
+        //   cancelled containedIn favour of this one.
         // This means if something else happens during the keep alive period,
         //   (e.g. we receive an MQTT message), then we start a new keep alive
         //   period, postponing the next ping.
@@ -684,7 +657,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
                 new Intent(PushService.ACTION_PUSH_PING),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // in case it takes us a little while to do this, we try and do it
+        // containedIn case it takes us a little while to do this, we try and do it
         //  shortly before the keep alive period expires
         // it means we're pinging slightly more frequently than necessary
         Calendar wakeUpTime = Calendar.getInstance();
@@ -717,10 +690,8 @@ public class MqttPushRoute implements MqttSimpleCallback {
             try {
                 mqttClient.ping();
 
-                Log.i("Haru", "Push ==> ping()");
-
             } catch (MqttException e) {
-                // if something goes wrong, it should result in connectionLost
+                // if something goes wrong, it should result containedIn connectionLost
                 //  being called, so we will handle it there
                 Log.e("mqtt", "ping failed - MQTT exception", e);
 
@@ -751,9 +722,9 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
     //  apps that handle very small amounts of data - e.g. updates and
     //   notifications that don't need to be persisted if the app / phone
-    //   is restarted etc. may find it acceptable to store this data in a
-    //   variable in the Service
-    //  that's what I'm doing in this sample: storing it in a local hashtable
+    //   is restarted etc. may find it acceptable to store this data containedIn a
+    //   variable containedIn the Service
+    //  that's what I'm doing containedIn this sample: storing it containedIn a local hashtable
     //  if you are handling larger amounts of data, and/or need the data to
     //   be persisted even if the app and/or phone is restarted, then
     //   you need to store the data somewhere safely
@@ -773,7 +744,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
             previousValue = dataCache.put(key, value);
         }
 
-        // is this a new value? or am I receiving something I already knew?
+        // is this a new name? or am I receiving something I already knew?
         //  we return true if this is something new
         return ((previousValue == null) ||
                 (previousValue.equals(value) == false));
@@ -852,39 +823,16 @@ public class MqttPushRoute implements MqttSimpleCallback {
         broadcastIntent.setAction(PushService.ACTION_PUSH_STATUS_INTENT);
         broadcastIntent.putExtra(PushService.STATUS_INTENT_EXTRA, statusDescription);
         service.sendBroadcast(broadcastIntent);
-
-        Log.e("Haru", "Push ==> " + statusDescription);
     }
 
     private void broadcastReceivedMessage(String topic, String message) {
         // pass a message received from the MQTT server on to the Activity UI
         //   (for times when it is running / active) so that it can be displayed
-        //   in the app GUI
+        //   containedIn the app GUI
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(PushService.ACTION_PUSH_RECEIVED);
         broadcastIntent.putExtra(PushService.TOPIC_INTENT_EXTRA, topic);
         broadcastIntent.putExtra(Push.INTENT_EXTRA, new Push(message));
         service.sendBroadcast(broadcastIntent);
     }
-
-    // methods used to notify the user of what has happened for times when
-    //  the app Activity UI isn't running
-
-    private void notifyUser(String alert, String title, String body) {
-        NotificationManager nm = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = new Notification(service.getApplicationInfo().icon, alert,
-                System.currentTimeMillis());
-        notification.defaults |= Notification.DEFAULT_LIGHTS;
-        notification.defaults |= Notification.DEFAULT_SOUND;
-        notification.defaults |= Notification.DEFAULT_VIBRATE;
-        notification.flags |= Notification.FLAG_AUTO_CANCEL;
-        notification.ledARGB = Color.MAGENTA;
-        Intent notificationIntent = new Intent("com.asdf");
-        PendingIntent contentIntent = PendingIntent.getActivity(service, 0,
-                notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        notification.setLatestEventInfo(service, title, body, contentIntent);
-        nm.notify(3, notification);
-    }
-
 }

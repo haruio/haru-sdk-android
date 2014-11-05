@@ -3,8 +3,6 @@ package com.haru;
 import android.content.Context;
 import android.util.Log;
 
-import com.haru.task.Task;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +12,11 @@ import java.util.*;
 
 public class Haru {
 
+    private static final String SDK_VERSION_NAME = "0.1.0-alpha";
+    private static final boolean IS_DEBUG_BUILD = true;
+
+    private static final String TAG = "Haru";
+
     private static final String AUTH_SERVER = "http://stage.haru.io:10000";
 
     // API 서버, Write 서버의 주소는 인증서버에서 가져온다. 기본값은 이거.
@@ -21,6 +24,10 @@ public class Haru {
     private static String writeServer = "http://stage.haru.io:10200/1";
     private static String mqttPushServer = "http://stage.haru.io:10300";
     private static String userServer = "http://stage.haru.io:10400/1";
+    private static String fileServer = "http://stage.haru.io:10500/";
+    private static String helpCenterServer = "http://stage.haru.io:3000/";
+
+    private static Context appContext;
 
     private static String mAppKey;
     private static String mSdkKey;
@@ -33,16 +40,22 @@ public class Haru {
      * @param appKey Application Key - Haru 대시보드 > 설정에서 확인
      * @param sdkKey SDK Key - Haru 대시보드 > 설정에서 확인
      */
-    public static void initialize(Context context, String appKey, String sdkKey) {
+    public static void init(Context context, String appKey, String sdkKey) {
         if (context == null) {
             throw new IllegalArgumentException("A context must be given.");
         }
         context = context.getApplicationContext();
+        appContext = context;
 
         mAppKey = appKey;
         mSdkKey = sdkKey;
 
+        // Entity에 등록
+        Entity.registerSubclass(Installation.class);
+        Entity.registerSubclass(User.class);
+
         HaruRequest.initialize(context);
+        useOfflineDataStoring(context);
         Installation.init(context);
 
         Log.e("Haru", "Device Token ==> " + Installation.getCurrentInstallation().getString("deviceToken"));
@@ -75,6 +88,14 @@ public class Haru {
         }
     }
 
+    private static void useOfflineDataStoring(Context context) {
+        LocalEntityStore.initialize(context);
+    }
+
+    public static String getSdkVersion() {
+        return SDK_VERSION_NAME;
+    }
+
     public static HaruRequest newApiRequest(String url) {
         return new HaruRequest(urlJoin(apiServer, url));
     }
@@ -95,6 +116,15 @@ public class Haru {
         return new HaruRequest(urlJoin(userServer, url));
     }
 
+    public static HaruRequest newFileRequest(String url) {
+        return new HaruRequest(urlJoin(fileServer, url));
+    }
+
+    public static HaruRequest helpCenterRequest(String url) {
+        return new HaruRequest(urlJoin(helpCenterServer, url));
+    }
+
+
     private static boolean isEncodable(Object o) {
         return (o instanceof String) || (o instanceof Boolean) || (o instanceof Number) || (o instanceof Date);
     }
@@ -106,8 +136,8 @@ public class Haru {
      */
     public static Object encode(Object object) {
         try {
-            if (object instanceof Encodable) {
-                return ((Encodable)object).encode();
+            if (object instanceof JsonEncodable) {
+                return ((JsonEncodable)object).toJson();
 
             } else if (object instanceof List) {
                 JSONArray jsonArray = new JSONArray();
@@ -141,7 +171,7 @@ public class Haru {
             String key = keys.next();
             Object value = null;
 
-            // Try to parse value
+            // Try to parse name
             try {
                 value = NumberFormat.getInstance().parse(String.valueOf(json.get(key)));
 
@@ -205,4 +235,20 @@ public class Haru {
     public static String getSdkKey() {
         return mSdkKey;
     }
+
+
+    public static void stackTrace(Exception e) {
+        if (IS_DEBUG_BUILD) {
+            StackTraceElement[] traces = e.getStackTrace();
+            for (StackTraceElement elem : traces) {
+                Haru.logD(elem.toString());
+            }
+        }
+    }
+
+    public static void logD(String message, Object ...args) {
+        Log.d(TAG, String.format(message, args));
+    }
+
+
 }

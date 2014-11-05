@@ -1,6 +1,6 @@
 package com.haru.write;
 
-import com.haru.Encodable;
+import com.haru.JsonEncodable;
 import com.haru.Haru;
 
 import org.json.JSONArray;
@@ -10,10 +10,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class OperationSet extends HashMap<String, Operation> implements Encodable {
+public class OperationSet extends HashMap<String, Operation> implements JsonEncodable {
 
     @Override
-    public Object encode() throws Exception {
+    public Object toJson() throws Exception {
         JSONArray jsonArray = new JSONArray();
         Iterator<Map.Entry<String, Operation>> iter = this.entrySet().iterator();
         while (iter.hasNext()) {

@@ -3,6 +3,10 @@ package com.haru;
 public class HaruException extends Exception {
     private int code;
 
+    public HaruException(String message) {
+        super(message);
+    }
+
     public HaruException(int code, String message) {
         super(message);
         this.code = code;

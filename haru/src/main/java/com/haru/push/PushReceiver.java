@@ -1,9 +1,12 @@
 package com.haru.push;
 
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.util.Log;
 
 import com.haru.PushService;
@@ -30,8 +33,10 @@ public class PushReceiver extends BroadcastReceiver {
 
                 case Push.TYPE_NOTIFICATION:
                     // 핸들러에서 만든 알림을 띄운다.
+                    NotificationManager nm =
+                            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                     Notification noti = onNotification(context, push);
-                    noti.notify();
+                    nm.notify(3, noti);
             }
 
             // 기본 핸들러
@@ -57,6 +62,22 @@ public class PushReceiver extends BroadcastReceiver {
         Notification noti =
                 new Notification(context.getApplicationInfo().icon,
                         push.getTitle(), System.currentTimeMillis());
+
+        Notification notification = new Notification(context.getApplicationInfo().icon,
+                push.getTitle(),
+                System.currentTimeMillis());
+
+        notification.defaults |= Notification.DEFAULT_LIGHTS;
+        notification.defaults |= Notification.DEFAULT_SOUND;
+        notification.defaults |= Notification.DEFAULT_VIBRATE;
+        notification.flags |= Notification.FLAG_AUTO_CANCEL;
+        notification.ledARGB = Color.MAGENTA;
+
+        Intent notificationIntent = new Intent("com.asdf");
+        PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.setLatestEventInfo(context, push.getTitle(), push.getMessage(), contentIntent);
 
         return noti;
     }

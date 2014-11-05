@@ -10,7 +10,7 @@
 package com.haru.task;
 
 /**
- * Provides a class that can be used for capturing variables in an anonymous class implementation.
+ * Provides a class that can be used for capturing variables containedIn an anonymous class implementation.
  * 
  * @param <T>
  */

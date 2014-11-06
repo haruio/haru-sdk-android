@@ -49,7 +49,7 @@ public class Push implements Parcelable {
      * Push를 사용한다.
      * @param context Application Context
      */
-    public static void initialize(Context context) {
+    public static void init(Context context) {
         staticContext = context;
         PushService.startIfRequired(context);
     }

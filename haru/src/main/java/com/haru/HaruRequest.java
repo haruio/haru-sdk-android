@@ -197,6 +197,11 @@ public class HaruRequest {
      */
     public Task<HaruResponse> executeAsync() {
 
+        // not initialized?
+        if (appKey == null) {
+            throw new RuntimeException("You need to call Haru.init() before using other APIs.");
+        }
+
         return Task.callInBackground(new Callable<HaruResponse>() {
             @Override
             public HaruResponse call() throws Exception {

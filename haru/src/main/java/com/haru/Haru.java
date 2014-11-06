@@ -198,6 +198,7 @@ public class Haru {
                             // okay, it's just a string...
                             try {
                                 value = json.getString(key);
+
                             } catch (JSONException j) {
                                 throw new RuntimeException("Unknown type!");
                             }

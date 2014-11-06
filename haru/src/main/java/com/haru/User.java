@@ -41,6 +41,11 @@ public class User extends Entity {
         // if already logined, just return the current user object
         if (currentUser != null) return currentUser;
 
+        // not initialized?
+        if (!LocalEntityStore.isInitialized()) {
+            throw new RuntimeException("You need to call Haru.init() before using other APIs.");
+        }
+
         // Now, try to retrieve user
         // get current user data
         ArrayList<Entity> entities =

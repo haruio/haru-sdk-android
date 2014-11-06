@@ -48,6 +48,10 @@ class LocalEntityStore {
         sqLiteHelper.getWritableDatabase();
     }
 
+    static boolean isInitialized() {
+        return sqLiteHelper != null;
+    }
+
     /**
      * 데이터베이스 스키마 구조를 생성한다.
      * @param db

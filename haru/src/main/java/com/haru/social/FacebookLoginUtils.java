@@ -18,6 +18,7 @@ import com.haru.Haru;
 import com.haru.HaruException;
 import com.haru.HaruResponse;
 import com.haru.Installation;
+import com.haru.User;
 import com.haru.callback.LoginCallback;
 import com.haru.task.Task;
 
@@ -34,7 +35,7 @@ public class FacebookLoginUtils {
     private static WeakReference<Activity> currentActivity;
 
     /**
-     *  Facebook SDK의 함수를 호출해줄 필요 없이, Activity를 가지고 자동으로 로그인해준다.
+     *  Facebook SDK의 함수를 직접 호출해줄 필요 없이, 자동으로 로그인해준다.
      *  callback을 통해 User 객체가 반환되고, 에러 발생시 HaruException을 반환한다.
      *
      *  @param activity Facebook Login을 호출하는 activity
@@ -42,8 +43,6 @@ public class FacebookLoginUtils {
      */
     public static void logIn(Activity activity, final LoginCallback callback) {
         currentActivity = new WeakReference<Activity>(activity);
-
-        Log.i("Haru", "facebookLogin");
 
         Session.openActiveSession(activity, true, new Session.StatusCallback() {
             @Override
@@ -62,12 +61,15 @@ public class FacebookLoginUtils {
                         @Override
                         public void onCompleted(GraphUser user, Response response) {
 
+                            Haru.logD("Facebook user info : %s", user.getId());
+
                             // Log in to Haru server
-                            BasicSocialLoginUtils.sendLogInRequest(user.getId(),
+                            User.socialLogin("facebook",
+                                    user.getId(),
                                     session.getAccessToken(),
                                     callback);
                         }
-                    });
+                    }).executeAsync();
 
                     Haru.logD("facebookLogin finished => %s", session.getAccessToken());
                 }
@@ -82,8 +84,7 @@ public class FacebookLoginUtils {
      *  @param context Application Context
      *  @param callback Login Callback
      */
-    public static void logIn(Context context,
-                             final AccessToken accessToken,
+    public static void logInAfterFacebookLogined(Context context,
                              final LoginCallback callback) {
 
         Session activeSession = Session.getActiveSession();
@@ -94,8 +95,9 @@ public class FacebookLoginUtils {
                 public void onCompleted(GraphUser user, Response response) {
 
                     // Log in to Haru server
-                    BasicSocialLoginUtils.sendLogInRequest(user.getId(),
-                            accessToken.getToken(),
+                    User.socialLogin("facebook",
+                            user.getId(),
+                            Session.getActiveSession().getAccessToken(),
                             callback);
                 }
             });

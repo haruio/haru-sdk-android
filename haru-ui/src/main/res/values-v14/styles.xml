@@ -1,0 +1,7 @@
+<resources>
+
+    <style name="BaseTheme" parent="android:Theme.Holo.NoActionBar">
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+</resources>

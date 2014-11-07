@@ -1,0 +1,12 @@
+<resources>
+
+    <style name="HaruEditText">
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorHint">@color/haru_login_white_secondary</item>
+        <item name="android:background">@drawable/haru_login_edit</item>
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+</resources>

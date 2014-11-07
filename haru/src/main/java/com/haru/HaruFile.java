@@ -52,24 +52,15 @@ public class HaruFile implements JsonEncodable {
     }
 
     public Task saveInBackground() {
-        return Haru.newWriteRequest("/file")
-                .post(file)
-                .executeAsync()
-                .continueWith(new Continuation<HaruResponse, HaruFile>() {
-                    @Override
-                    public HaruFile then(Task<HaruResponse> task) throws Exception {
-
-                        return null;
-                    }
-                });
+        return saveInBackground(null);
     }
 
-    public Task saveInBackground(SaveCallback saveCallback) {
+    public Task saveInBackground(final SaveCallback saveCallback) {
 
-        HaruRequest request = Haru.newFileRequest("/file")
-                .post(file);
+        HaruRequest request = Haru.newFileRequest("/file").post(file);
 
-        if (saveCallback instanceof SaveWithProgressCallback) {
+        // check if it's progress-able callback
+        if (saveCallback != null && saveCallback instanceof SaveWithProgressCallback) {
             final SaveWithProgressCallback progressCallback = (SaveWithProgressCallback) saveCallback;
             ProgressOutputStream.ProgressListener progressListener =
                     new ProgressOutputStream.ProgressListener() {
@@ -87,6 +78,9 @@ public class HaruFile implements JsonEncodable {
             public HaruFile then(Task<HaruResponse> task) throws Exception {
                 if (task.isFaulted()) {
                     Haru.stackTrace(task.getError());
+                    if (saveCallback != null) {
+                        saveCallback.done(new HaruException(task.getError()));
+                    }
                     throw task.getError();
                 }
 
@@ -96,6 +90,9 @@ public class HaruFile implements JsonEncodable {
                 HaruFile.this.createdAt = new Date(body.getLong("createdAt"));
                 HaruFile.this.updatedAt = new Date(body.getLong("updatedAt"));
                 HaruFile.this.url = body.getString("url");
+
+                // call callback
+                if (saveCallback != null) saveCallback.done(null);
 
                 return HaruFile.this;
             }

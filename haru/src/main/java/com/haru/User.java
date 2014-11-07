@@ -34,6 +34,7 @@ public class User extends Entity {
     /**
      * 현재 로그인된 User를 반환한다.
      * 만약, 로그인되어있으나 현재 유저가 로딩되어있지 않으면 로컬 데이터스토어로부터 로딩한다.
+     *
      * @return 현재 로그인된 User 객체
      */
     public static User getCurrentUser() {
@@ -67,10 +68,11 @@ public class User extends Entity {
 
     /**
      * 현재 로그인된 User 세션의 토큰을 반환한다.
+     *
      * @return sessionToken (미로그인시 null)
      */
     public static String getCurrentSessionToken() {
-        User current  = getCurrentUser();
+        User current = getCurrentUser();
         if (current != null) return current.sessionToken;
         else return null;
     }
@@ -81,6 +83,7 @@ public class User extends Entity {
 
     /**
      * 유저의 이메일을 설정한다.
+     *
      * @param email 이메일
      */
     public void setEmail(String email) {
@@ -89,6 +92,7 @@ public class User extends Entity {
 
     /**
      * 유저의 이메일을 반환한다.
+     *
      * @return Email
      */
     public String getEmail() {
@@ -97,6 +101,7 @@ public class User extends Entity {
 
     /**
      * 유저의 이름 (아이디)를 설정한다.
+     *
      * @param name 유저 이름 (ID)
      */
     public void setUserName(String name) {
@@ -105,6 +110,7 @@ public class User extends Entity {
 
     /**
      * 유저의 이름 (아이디)를 반환한다.
+     *
      * @return 이름 (아이디)
      */
     public String getUserName() {
@@ -113,8 +119,9 @@ public class User extends Entity {
 
     /**
      * 유저의 패스워드를 설정한다.
-     *
+     * <p/>
      * 서버에 저장되지 않으며, 로컬에만 보존된다. 회원가입 시에만 써야 한다.
+     *
      * @param password 패스워드
      */
     public void setPassword(String password) {
@@ -199,12 +206,11 @@ public class User extends Entity {
         }, Task.UI_THREAD_EXECUTOR);
     }
 
-
     /**
      * 로그인한다.
      *
      * @param userName 유저 ID
-     * @param pw 패스워드
+     * @param pw       패스워드
      * @param callback 로그인 이후 콜백
      * @return 로그인 태스크
      */
@@ -219,6 +225,87 @@ public class User extends Entity {
                 .executeAsync();
 
         return loginTask.onSuccessTask(new Continuation<HaruResponse, Task<Entity>>() {
+            @Override
+            public Task<Entity> then(Task<HaruResponse> task) throws Exception {
+
+                HaruResponse response = task.getResult();
+                if (response.hasError()) {
+                    throw response.getError();
+                }
+
+                // Login succeed. now we have to save current session
+                String userId = response.getJsonBody().getString("_id");
+                String sessionToken = response.getJsonBody().getString("sessionToken");
+
+                // Save some user data - before we fetch
+                currentUser = new User();
+                currentUser.entityId = userId;
+                currentUser.sessionToken = sessionToken;
+
+                // Retrieve user data - to know more about user.
+                return User.retrieveTask(User.class, userId);
+
+            }
+        }, Task.BACKGROUND_EXECUTOR).continueWith(new Continuation<Entity, User>() {
+            @Override
+            public User then(Task<Entity> task) throws Exception {
+
+                if (task.isFaulted()) {
+                    // Exception? just log and throw it
+                    Exception e = task.getError();
+                    e.printStackTrace();
+                    callback.done(null, new HaruException(e));
+                    throw e;
+                }
+
+                // Fill the more information about user
+                Entity fetchResult = task.getResult();
+                currentUser.entityData = fetchResult.entityData;
+                currentUser.createdAt = fetchResult.createdAt;
+                currentUser.updatedAt = fetchResult.updatedAt;
+
+                // Save current user
+                LocalEntityStore.deleteTagFromLocal(CLASS_NAME, CURRENT_USER_TAG);
+                LocalEntityStore.saveEntity(currentUser, CURRENT_USER_TAG);
+
+                // Call LoginCallback
+                callback.done(currentUser, null);
+
+                // pass the result
+                return currentUser;
+
+            }
+        }, Task.UI_THREAD_EXECUTOR);
+    }
+
+    public static Task socialLogin(String socialProvider,
+                            String userId,
+                            String accessToken,
+                            final LoginCallback callback) {
+
+        // { deviceToken: 123, authData: { facebook: { ... }}} Format
+        JSONObject request = new JSONObject();
+        try {
+            request.put("deviceToken",
+                    Installation.getCurrentInstallation().getString("deviceToken"));
+
+            JSONObject providerInfo = new JSONObject();
+            providerInfo.put("id", userId);
+            providerInfo.put("access_token", accessToken);
+
+            JSONObject authData = new JSONObject();
+            authData.put(socialProvider, providerInfo);
+            request.put("authData", authData);
+
+        } catch (JSONException e) {
+            callback.done(null, new HaruException(e));
+        }
+
+        Task<HaruResponse> socialLoginTask = Haru.newUserRequest("/users")
+                .post(request)
+                .executeAsync();
+
+        return socialLoginTask.onSuccessTask(new Continuation<HaruResponse, Task<Entity>>() {
             @Override
             public Task<Entity> then(Task<HaruResponse> task) throws Exception {
 

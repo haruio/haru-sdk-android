@@ -1,0 +1,20 @@
+<resources>
+
+    <style name="BaseTheme" parent="android:Theme.Black.NoTitleBar">
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="BaseTheme">
+        <item name="android:windowBackground">@color/haru_login_background</item>
+    </style>
+
+    <style name="HaruEditText">
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorHint">@color/haru_login_white_secondary</item>
+        <item name="android:background">@drawable/haru_login_edit</item>
+    </style>
+
+</resources>

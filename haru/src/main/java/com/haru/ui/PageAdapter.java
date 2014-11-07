@@ -1,4 +1,4 @@
-package com.haru;
+package com.haru.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import com.haru.Entity;
+import com.haru.HaruException;
+import com.haru.Query;
 import com.haru.callback.FindCallback;
 
 import java.util.ArrayList;

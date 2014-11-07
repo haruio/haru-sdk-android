@@ -10,6 +10,10 @@ import org.json.JSONObject;
 import java.text.NumberFormat;
 import java.util.*;
 
+/**
+ * Haru Android SDK를 초기화하는 역할이자,
+ * 각종 함수들을 모아놓은 Utility Class의 역할을 한다.
+ */
 public class Haru {
 
     private static final String SDK_VERSION_NAME = "0.1.0-alpha";
@@ -27,8 +31,6 @@ public class Haru {
     private static String fileServer = "http://stage.haru.io:10500/";
     private static String helpCenterServer = "http://stage.haru.io:3000/";
 
-    private static Context appContext;
-
     private static String mAppKey;
     private static String mSdkKey;
 
@@ -45,7 +47,6 @@ public class Haru {
             throw new IllegalArgumentException("A context must be given.");
         }
         context = context.getApplicationContext();
-        appContext = context;
 
         mAppKey = appKey;
         mSdkKey = sdkKey;
@@ -57,8 +58,6 @@ public class Haru {
         HaruRequest.initialize(context);
         useOfflineDataStoring(context);
         Installation.init(context);
-
-        Log.e("Haru", "Device Token ==> " + Installation.getCurrentInstallation().getString("deviceToken"));
 
         // 서버 주소를 받아온다.
         try {
@@ -248,7 +247,11 @@ public class Haru {
     }
 
     public static void logD(String message, Object ...args) {
-        Log.d(TAG, String.format(message, args));
+        if (IS_DEBUG_BUILD) Log.d(TAG, String.format(message, args));
+    }
+
+    public static void logI(String message, Object ...args) {
+        Log.i(TAG, String.format(message, args));
     }
 
 

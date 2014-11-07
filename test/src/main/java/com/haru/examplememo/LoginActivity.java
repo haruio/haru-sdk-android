@@ -41,7 +41,23 @@ public class LoginActivity extends Activity {
         findViewById(R.id.facebookLogin).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                facebookLogin();
+                if (Session.getCurrentSession() == null
+                        || !Session.getCurrentSession().isOpened()) {
+                    facebookLogin();
+
+                } else {
+                    Session.getCurrentSession().close(new SessionCallback() {
+                        @Override
+                        public void onSessionOpened() {
+
+                        }
+
+                        @Override
+                        public void onSessionClosed(KakaoException exception) {
+
+                        }
+                    });
+                }
             }
         });
 
@@ -91,7 +107,7 @@ public class LoginActivity extends Activity {
     }
 
     private void onSessionOpened() {
-        KakaoLoginUtils.logInAfterKakaoLogin(new LoginCallback() {
+        KakaoLoginUtils.logInAfterKakaoLogined(new LoginCallback() {
             @Override
             public void done(User user, HaruException error) {
             }

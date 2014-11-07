@@ -207,6 +207,8 @@ public class HaruRequest {
             public HaruResponse call() throws Exception {
                 HttpUriRequest request;
 
+                Haru.logD("Request URL => %s", endpoint);
+
                 // Write HTTP Request
                 switch(method) {
                     case 0: // GET

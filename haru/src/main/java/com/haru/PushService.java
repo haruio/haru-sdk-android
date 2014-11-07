@@ -18,18 +18,20 @@ public class PushService extends Service {
     public static final String TOPIC_INTENT_EXTRA = "intent.extra.topic";
 
     // constants used to tell the Activity UI the connection status
-    public static final String ACTION_PUSH_STATUS_INTENT = "com.haru.PUSH_STATUS";
+    public static final String ACTION_PUSH_STATUS_INTENT = "com.haru.push.STATUS";
     public static final String STATUS_INTENT_EXTRA = "intent.extra.status";
 
     // constant used internally to schedule the next ping event
-    public static final String ACTION_PUSH_PING = "com.haru.PUSH_PING";
+    public static final String ACTION_PUSH_PING = "com.haru.push.PING";
 
+    // using MQTT - Haru currently does not support GCM (Google Cloud Messaging)
     private MqttPushRoute mqttPushRoute;
 
     /**
-     * 서비스가 켜져있지 않을 시 서비스를 시작시킨다.
-     * 부팅 완료시 (ACTION_BOOT_COMPLETED) 호출된다.
-     * @param context
+     * Start the service if it's not started.
+     * Called after device boots (ACTION_BOOT_COMPLETED)
+     *
+     * @param context Application Context
      */
     public static void startIfRequired(Context context) {
 
@@ -53,22 +55,6 @@ public class PushService extends Service {
         mqttPushRoute = new MqttPushRoute(this);
     }
 
-    /**
-     * 서비스가 시작될 때 호출된다.
-     */
-    public void start(final Intent intent, final int startId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mqttPushRoute.handleStart(intent, startId);
-            }
-        }, "MQTTservice").start();
-
-        // Sub / Unsub 브로드캐스트 리시버 등록
-        Log.i("Haru", "Push service started!");
-    }
-
-
     @Override
     public void onStart(final Intent intent, final int startId) {
         // This is the old onStart method that will be called on the pre-2.0
@@ -87,6 +73,19 @@ public class PushService extends Service {
         return START_STICKY;
     }
 
+    /**
+     * Called when the PushService is started.
+     */
+    public void start(final Intent intent, final int startId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mqttPushRoute.handleStart(intent, startId);
+            }
+        }, "MQTTservice").start();
+
+        Haru.logI("Push service started!");
+    }
 
     @Override
     public void onDestroy() {

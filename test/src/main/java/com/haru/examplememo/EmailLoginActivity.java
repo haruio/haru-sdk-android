@@ -3,6 +3,7 @@ package com.haru.examplememo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,7 +21,7 @@ import com.kakao.exception.KakaoException;
 /**
  * 샘플 메모앱 using Haru
  */
-public class EmailLoginActivity extends Activity {
+public class EmailLoginActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +42,15 @@ public class EmailLoginActivity extends Activity {
                 User.logInInBackground(userName, password, new LoginCallback() {
                     @Override
                     public void done(User user, HaruException error) {
-                        Toast.makeText(EmailLoginActivity.this, user.getId(), Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(EmailLoginActivity.this, MainActivity.class));
-                        finish();
+                        if (error != null) {
+                            if (error.getErrorCode() == HaruException.USERNAME_MISSING) {
+                            }
+                        }
+
+                        // Login succeed. Go to main activity
+                        Intent intent = new Intent(EmailLoginActivity.this, MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     }
                 });
             }

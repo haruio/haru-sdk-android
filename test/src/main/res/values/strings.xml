@@ -5,7 +5,6 @@
     <string name="kakao_app_key">ce664134a24b4a97eb532ddd511faf95</string>
 
     <string name="app_name">Haru Memo</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
 </resources>

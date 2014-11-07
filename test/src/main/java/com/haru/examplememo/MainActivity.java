@@ -1,7 +1,6 @@
 package com.haru.examplememo;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -11,10 +10,8 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -22,17 +19,10 @@ import android.widget.Toast;
 
 import com.haru.Entity;
 import com.haru.HaruException;
-import com.haru.PageAdapter;
-import com.haru.User;
+import com.haru.ui.PageAdapter;
 import com.haru.callback.DeleteCallback;
-import com.haru.callback.FindCallback;
-import com.haru.callback.LoginCallback;
 import com.haru.callback.SaveCallback;
-
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.haru.ui.ViewHolder;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -51,8 +41,10 @@ public class MainActivity extends ActionBarActivity {
         adapter.setOnViewRenderListener(new PageAdapter.OnViewRenderListener() {
             @Override
             public void onViewRender(int index, Entity article, View view) {
-                TextView listTitle = (TextView) view.findViewById(R.id.listTitle),
-                        updatedAt = (TextView) view.findViewById(R.id.listUpdatedAt);
+
+                ViewHolder holder = new ViewHolder(view);
+                TextView listTitle = holder.findViewById(R.id.listTitle),
+                        updatedAt = holder.findViewById(R.id.listUpdatedAt);
 
                 listTitle.setText(article.getString("title"));
 

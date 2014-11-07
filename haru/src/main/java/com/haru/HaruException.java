@@ -1,6 +1,9 @@
 package com.haru;
 
 public class HaruException extends Exception {
+
+    public static final int USERNAME_MISSING = 200;
+
     private int code;
 
     public HaruException(String message) {
@@ -20,6 +23,10 @@ public class HaruException extends Exception {
     public HaruException(Throwable cause) {
         super(cause);
         this.code = -1;
+    }
+
+    public int getErrorCode() {
+        return code;
     }
 
     @Override

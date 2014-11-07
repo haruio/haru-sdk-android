@@ -25,6 +25,13 @@ public final class Installation extends Entity {
     private static Installation currentInstallation;
 
     /**
+     * Cannot initiate from other place - the installation is must be only one.
+     */
+    Installation() {
+        super(CLASS_NAME);
+    }
+
+    /**
      * Installation을 초기화하고, 현재 설치 정보를 구해온다.
      * @param appContext Application Context {@link android.app.Application}
      */
@@ -65,10 +72,6 @@ public final class Installation extends Entity {
 //          currentInstallation.fillInformation();
 //          currentInstallation.saveInBackground();
         }
-    }
-
-    Installation() {
-        super(CLASS_NAME);
     }
 
     void fillInformation() {

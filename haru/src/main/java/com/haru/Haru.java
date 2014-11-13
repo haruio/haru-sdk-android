@@ -21,16 +21,6 @@ public class Haru {
 
     private static final String TAG = "Haru";
 
-    private static final String AUTH_SERVER = "http://stage.haru.io:10000";
-
-    // API 서버, Write 서버의 주소는 인증서버에서 가져온다. 기본값은 이거.
-    private static String apiServer = "http://stage.haru.io:10100/1";
-    private static String writeServer = "http://stage.haru.io:10200/1";
-    private static String mqttPushServer = "http://stage.haru.io:10300";
-    private static String userServer = "http://stage.haru.io:10400/1";
-    private static String fileServer = "http://stage.haru.io:10500/";
-    private static String helpCenterServer = "http://stage.haru.io:3000/";
-
     private static String mAppKey;
     private static String mSdkKey;
 
@@ -58,33 +48,7 @@ public class Haru {
         HaruRequest.initialize(context);
         useOfflineDataStoring(context);
         Installation.init(context);
-
-        // 서버 주소를 받아온다.
-        try {
-/*            Task authTask = newAuthRequest("/account")
-                    .post(new HaruRequest.Param())
-                    .executeAsync();
-
-            authTask.waitForCompletion();
-
-            if (authTask.isFaulted()) {
-                throw authTask.getError();
-            }
-            HaruResponse result = (HaruResponse) authTask.getResult();
-            if (result.hasError()) throw result.getError();
-
-            JSONObject body = result.getJsonBody();
-            apiServer = body.getJSONObject("readServer").getString("host");
-            writeServer = body.getJSONObject("writeServer").getString("host");
-            mqttPushServer = body.getJSONObject("pushServer").getJSONObject("mqtt").getString("host");
-
-            Log.d("Haru", "API Server : " + apiServer);
-            Log.d("Haru", "Write Server : " + writeServer);
-            Log.d("Haru", "Push Server : " + mqttPushServer);*/
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        Config.init(context);
     }
 
     private static void useOfflineDataStoring(Context context) {
@@ -95,37 +59,11 @@ public class Haru {
         return SDK_VERSION_NAME;
     }
 
-    public static HaruRequest newApiRequest(String url) {
-        return new HaruRequest(urlJoin(apiServer, url));
-    }
-
-    public static HaruRequest newAuthRequest(String url) {
-        return new HaruRequest(urlJoin(AUTH_SERVER, url));
-    }
-
-    public static HaruRequest newWriteRequest(String url) {
-        return new HaruRequest(urlJoin(writeServer, url));
-    }
-
-    public static HaruRequest newPushRequest(String url) {
-        return new HaruRequest(urlJoin(mqttPushServer, url));
-    }
-
-    public static HaruRequest newUserRequest(String url) {
-        return new HaruRequest(urlJoin(userServer, url));
-    }
-
-    public static HaruRequest newFileRequest(String url) {
-        return new HaruRequest(urlJoin(fileServer, url));
-    }
-
-    public static HaruRequest helpCenterRequest(String url) {
-        return new HaruRequest(urlJoin(helpCenterServer, url));
-    }
-
-
-    private static boolean isEncodable(Object o) {
-        return (o instanceof String) || (o instanceof Boolean) || (o instanceof Number) || (o instanceof Date);
+    private static boolean isPrimitiveType(Object o) {
+        return (o instanceof String)
+                || (o instanceof Boolean)
+                || (o instanceof Number)
+                || (o instanceof Date);
     }
 
     /**
@@ -153,7 +91,7 @@ public class Haru {
             } else if (object instanceof Map) {
                 return new JSONObject((Map)object);
 
-            } else if (isEncodable(object)) {
+            } else if (isPrimitiveType(object)) {
                 return String.valueOf(object);
             }
 
@@ -165,41 +103,61 @@ public class Haru {
     }
 
     private static void convertJsonToMap(JSONObject json, Map<String, Object> outputMap) {
-        Iterator<String> keys = json.keys();
+        Iterator keys = json.keys();
         while (keys.hasNext()) {
-            String key = keys.next();
+            String key = (String) keys.next();
             Object value = null;
 
+            // I know it's very dirty way, but it's the only way
+            // to convert JSON values to actual types.
             // Try to parse name
             try {
-                value = NumberFormat.getInstance().parse(String.valueOf(json.get(key)));
+                Haru.logD("JSON %s : Double?", key);
+                value = json.getDouble(key);
 
             } catch (Exception e) {
-                // it's probably a boolean?
+
                 try {
-                    value = json.getBoolean(key);
+                    Haru.logD("JSON %s : Long?", key);
+                    value = json.getLong(key);
 
-                } catch (JSONException je) {
-                    // or JSONArray?
+                } catch (JSONException le) {
                     try {
-                        // TODO: Nested array 처리
-                        value = json.getJSONArray(key);
+                        Haru.logD("JSON %s : Integer?", key);
+                        value = json.getInt(key);
 
-                    } catch (JSONException jee) {
-                        // or JSONObject?
+                    } catch (JSONException ie) {
+                        // it's probably a boolean?
                         try {
-                            JSONObject nestedJson = json.getJSONObject(key);
-                            Map<String, Object> nestedMap = new HashMap<String, Object>();
-                            convertJsonToMap(nestedJson, nestedMap);
-                            value = nestedMap;
+                            Haru.logD("JSON %s : Bool?", key);
+                            value = json.getBoolean(key);
 
-                        } catch (JSONException jeee) {
-                            // okay, it's just a string...
+                        } catch (JSONException je) {
+                            // or JSONArray?
                             try {
-                                value = json.getString(key);
+                                // TODO: Nested array 처리
+                                Haru.logD("JSON %s : Array?", key);
+                                value = json.getJSONArray(key);
 
-                            } catch (JSONException j) {
-                                throw new RuntimeException("Unknown type!");
+                            } catch (JSONException jee) {
+                                // or JSONObject?
+                                try {
+                                    Haru.logD("JSON %s : JSON?", key);
+                                    JSONObject nestedJson = json.getJSONObject(key);
+                                    Map<String, Object> nestedMap = new HashMap<String, Object>();
+                                    convertJsonToMap(nestedJson, nestedMap);
+                                    value = nestedMap;
+
+                                } catch (JSONException jeee) {
+                                    // okay, it's just a string...
+                                    try {
+                                        Haru.logD("JSON %s : String!", key);
+                                        value = json.getString(key);
+
+                                    } catch (JSONException j) {
+                                        throw new RuntimeException("Unknown type!");
+                                    }
+                                }
                             }
                         }
                     }
@@ -209,8 +167,8 @@ public class Haru {
         }
     }
 
-    public static Map<String, Object> convertJsonToMap(JSONObject json) {
-        Map<String, Object> map = new HashMap<String, Object>();
+    public static HashMap<String, Object> convertJsonToMap(JSONObject json) {
+        HashMap<String, Object> map = new HashMap<String, Object>();
         convertJsonToMap(json, map);
         return map;
     }
@@ -239,6 +197,7 @@ public class Haru {
 
     public static void stackTrace(Exception e) {
         if (IS_DEBUG_BUILD) {
+            Haru.logD(e.getMessage());
             StackTraceElement[] traces = e.getStackTrace();
             for (StackTraceElement elem : traces) {
                 Haru.logD(elem.toString());

@@ -56,8 +56,11 @@ public class HaruFile implements JsonEncodable {
     }
 
     public Task saveInBackground(final SaveCallback saveCallback) {
+        if (!isAccessible) {
+            throw new IllegalStateException("The original file path is not set.");
+        }
 
-        HaruRequest request = Haru.newFileRequest("/file").post(file);
+        HaruRequest request = new HaruRequest("/files").post(file);
 
         // check if it's progress-able callback
         if (saveCallback != null && saveCallback instanceof SaveWithProgressCallback) {

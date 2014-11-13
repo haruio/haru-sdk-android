@@ -329,7 +329,7 @@ public class Entity implements JsonEncodable {
         }
     }
 
-    protected HashMap<String, Object> getCurrentEntityMap() {
+    public HashMap<String, Object> getAll() {
         HashMap<String, Object> currentData = new HashMap<String, Object>(entityData);
         copyMap(changedData, currentData);
         return currentData;
@@ -416,7 +416,7 @@ public class Entity implements JsonEncodable {
      * Entity를 생성한다.
      */
     private Task createEntity(final SaveCallback callback) {
-        Task<HaruResponse> creationTask = Haru.newWriteRequest("/classes/" + className)
+        Task<HaruResponse> creationTask = new HaruRequest("/classes/" + className)
                 .post((JSONObject) this.toJson())
                 .executeAsync();
 
@@ -471,7 +471,7 @@ public class Entity implements JsonEncodable {
             e.printStackTrace();
         }
 
-        Task<HaruResponse> task = Haru.newWriteRequest("/batch")
+        Task<HaruResponse> task = new HaruRequest("/batch")
                 .post(request)
                 .executeAsync();
 
@@ -506,6 +506,14 @@ public class Entity implements JsonEncodable {
     }
 
     /**
+     * Returns all data of the Entity.
+     * @return Data Map (String, Object pair)
+     */
+    public Map<String, Object> getEntityData() {
+        return entityData;
+    }
+
+    /**
      * Entity를 삭제한다.
      * @return 삭제 태스크
      */
@@ -520,7 +528,7 @@ public class Entity implements JsonEncodable {
      */
     public Task deleteInBackground(final DeleteCallback callback) {
         synchronized (lock) {
-            Task<HaruResponse> deleteTask = Haru.newWriteRequest("/classes/" + className + "/" + entityId)
+            Task<HaruResponse> deleteTask = new HaruRequest("/classes/" + className + "/" + entityId)
                     .delete()
                     .executeAsync();
 
@@ -552,7 +560,7 @@ public class Entity implements JsonEncodable {
         }
         discardChanges();
 
-        Task<HaruResponse> fetchTask = Haru.newApiRequest("/classes/" + className + "/" + entityId).executeAsync();
+        Task<HaruResponse> fetchTask = new HaruRequest("/classes/" + className + "/" + entityId).executeAsync();
         return fetchTask.continueWith(new Continuation<HaruResponse, Entity>() {
             @Override
             public Entity then(Task<HaruResponse> task) throws Exception {
@@ -664,7 +672,7 @@ public class Entity implements JsonEncodable {
     @Override
     public Object toJson() {
         // TODO: Nested Object에 대한 처리를 하시오.
-        HashMap<String, Object> entityMap = getCurrentEntityMap();
+        HashMap<String, Object> entityMap = getAll();
         return new JSONObject(entityMap);
     }
 }

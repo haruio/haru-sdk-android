@@ -16,7 +16,7 @@ public class Notice {
     private String title, body, imageUrl;
     private Date createdAt;
 
-    public String getNoticeId() {
+    public String getId() {
         return noticeId;
     }
 

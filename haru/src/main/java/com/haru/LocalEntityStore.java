@@ -46,6 +46,7 @@ class LocalEntityStore {
         };
 
         sqLiteHelper.getWritableDatabase();
+        sqLiteHelper.close();
     }
 
     static boolean isInitialized() {
@@ -58,7 +59,7 @@ class LocalEntityStore {
      */
     private static void createDatabase(SQLiteDatabase db) {
 
-        Log.i("Haru", "Creating DB");
+        Haru.logI("Creating Local Entity Store...");
         String sql = "CREATE TABLE HaruEntity ("
                 + "id TEXT PRIMARY KEY,"
                 + "className TEXT NOT NULL,"
@@ -78,19 +79,21 @@ class LocalEntityStore {
      */
     static void saveEntity(Entity entity, String tag) {
 
-        SQLiteDatabase sqLiteDatabase = sqLiteHelper.getWritableDatabase();
+        try {
+            SQLiteDatabase sqLiteDatabase = sqLiteHelper.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
-        values.put("className", entity.getClassName());
-        values.put("entityId", entity.getId());
-        values.put("data", entity.toJson().toString());
-        if (tag != null) values.put("tag", tag);
+            ContentValues values = new ContentValues();
+            values.put("className", entity.getClassName());
+            values.put("entityId", entity.getId());
+            values.put("data", entity.toJson().toString());
+            if (tag != null) values.put("tag", tag);
 
-        sqLiteDatabase.beginTransaction();
-        sqLiteDatabase.insertWithOnConflict("HaruEntity", null, values, SQLiteDatabase.CONFLICT_REPLACE);
-        sqLiteDatabase.setTransactionSuccessful();
-        sqLiteDatabase.endTransaction();
-        sqLiteDatabase.close();
+            sqLiteDatabase.insertWithOnConflict("HaruEntity", null, values, SQLiteDatabase.CONFLICT_REPLACE);
+            sqLiteDatabase.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static <T extends Entity> ArrayList<T> retrieve(String className,
@@ -106,20 +109,16 @@ class LocalEntityStore {
         // Convert JSON Data to Entity object
         try {
             ArrayList<T> entities = new ArrayList<T>();
-            //cursor.moveToFirst();
-
-            Log.i("Haru", "Database : " + className);
-
             while (cursor.moveToNext()) {
-                Log.i("Haru", " => element!");
                 entities.add((T) Entity.fromJsonToSubclass(Entity.findClassByName(className),
                         cursor.getString(cursor.getColumnIndex("entityId")),
                         new JSONObject(cursor.getString(cursor.getColumnIndex("data")))));
             }
-            Log.i("Haru", "Done <=");
+            sqLiteHelper.close();
             return entities;
 
         } catch (Exception e) {
+            sqLiteHelper.close();
             throw new RuntimeException("Failed to convert entity from local data: Malformed JSON", e);
         }
     }
@@ -175,10 +174,7 @@ class LocalEntityStore {
      */
     static void deleteEntityFromLocal(Entity entity) {
         SQLiteDatabase sqLiteDatabase = sqLiteHelper.getWritableDatabase();
-        sqLiteDatabase.beginTransaction();
         sqLiteDatabase.delete("HaruEntity", "entityId=?", new String[] { entity.getId() });
-        sqLiteDatabase.setTransactionSuccessful();
-        sqLiteDatabase.endTransaction();
         sqLiteDatabase.close();
     }
 
@@ -189,11 +185,8 @@ class LocalEntityStore {
      */
     static void deleteTagFromLocal(String className, String tag) {
         SQLiteDatabase sqLiteDatabase = sqLiteHelper.getWritableDatabase();
-        sqLiteDatabase.beginTransaction();
         sqLiteDatabase.delete("HaruEntity", "className=? AND tag=?",
                 new String[] { className, tag });
-        sqLiteDatabase.setTransactionSuccessful();
-        sqLiteDatabase.endTransaction();
         sqLiteDatabase.close();
     }
 }

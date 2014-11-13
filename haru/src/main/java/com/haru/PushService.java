@@ -2,13 +2,9 @@ package com.haru;
 
 import android.app.ActivityManager;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.IBinder;
-import android.util.Log;
-
 
 import com.haru.push.MqttPushRoute;
 

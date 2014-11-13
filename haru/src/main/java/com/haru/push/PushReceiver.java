@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.haru.Haru;
 import com.haru.PushService;
 
 /**
@@ -17,14 +18,12 @@ import com.haru.PushService;
 public class PushReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.e("Haru", "!!!! " + intent.getAction());
-
         if (intent.getAction().equals(PushService.ACTION_PUSH_RECEIVED)) {
-
 
             Push push = intent.getParcelableExtra(Push.INTENT_EXTRA);
             if (push == null) return;
-            Log.e("Haru", "push Received! " + push.getMessage());
+
+            Haru.logI("Push Received! " + push.getMessage());
 
             switch (push.getType()) {
                 case Push.TYPE_MESSAGE:
@@ -55,7 +54,6 @@ public class PushReceiver extends BroadcastReceiver {
     }
 
     public void onMessage(Context context, Push push) {
-
     }
 
     public Notification onNotification(Context context, Push push) {

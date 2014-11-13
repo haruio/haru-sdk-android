@@ -1,7 +1,6 @@
 package com.haru.push;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,14 +8,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.haru.Haru;
 import com.haru.Installation;
 import com.haru.PushService;
 import com.ibm.mqtt.IMqttClient;
@@ -59,16 +57,16 @@ public class MqttPushRoute implements MqttSimpleCallback {
     private MQTTConnectionStatus connectionStatus = MQTTConnectionStatus.INITIAL;
 
     //    host name of the server we're receiving push notifications from
-    private String brokerHostName = "stage.haru.io";
+    private static final String BROKER_HOST_NAME = "push.haru.io";
+    private static final int BROKER_PORT_NUMBER = 80;
     //    topic we want to receive messages about
     private String topicName;
 
 
     // defaults - this sample uses very basic defaults for it's interactions
     //   with message brokers
-    private int brokerPortNumber = 1884;
     private MqttPersistence usePersistence = null;
-    private boolean cleanStart = false;
+    private static final boolean CLEAN_START = false;
     private int[] qualitiesOfService = {0};
 
     //  how often should the app ping the server to keep the connection alive?
@@ -131,7 +129,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
     public MqttPushRoute(Service service) {
         this.service = service;
-        this.topicName = (String) Installation.getCurrentInstallation().get("deviceToken");
+        this.topicName = Installation.getCurrentInstallation().getString("deviceToken");
 
         // reset status variable to initial state
         connectionStatus = MQTTConnectionStatus.INITIAL;
@@ -148,7 +146,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
                 new IntentFilter(ConnectivityManager.ACTION_BACKGROUND_DATA_SETTING_CHANGED));
 
         // define the connection to the broker
-        defineConnectionToBroker(brokerHostName);
+        defineConnectionToBroker(BROKER_HOST_NAME);
     }
 
     public void serviceDestroyed() {
@@ -305,15 +303,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         broadcastServiceStatus("Disconnected");
     }
 
-
-    /************************************************************************/
-    /*    METHODS - MQTT methods inherited from MQTT classes                */
-
     /**
-     * ********************************************************************
-     */
-
-    /*
      * callback - method called when we no longer have a connection to the
      *  message broker server
      */
@@ -366,8 +356,8 @@ public class MqttPushRoute implements MqttSimpleCallback {
     }
 
 
-    /*
-     *   callback - called when we receive a message from the server
+    /**
+     *  callback - called when we receive a message from the server
      */
     @Override
     public void publishArrived(String topic, byte[] payloadbytes, int qos, boolean retained) {
@@ -409,20 +399,12 @@ public class MqttPushRoute implements MqttSimpleCallback {
         wl.release();
     }
 
-
-    /************************************************************************/
-    /*    METHODS - wrappers for some of the MQTT methods that we use       */
-
     /**
-     * ********************************************************************
-     */
-
-    /*
      * Create a client connection object that defines our connection to a
      *   message broker server
      */
     private void defineConnectionToBroker(String brokerHostName) {
-        String mqttConnSpec = "tcp://" + brokerHostName + "@" + brokerPortNumber;
+        String mqttConnSpec = "tcp://" + brokerHostName + "@" + BROKER_PORT_NUMBER;
 
         try {
             // define the connection to the broker
@@ -442,13 +424,13 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-    /*
+    /**
      * (Re-)connect to the message broker
      */
     private boolean connectToBroker() {
         try {
             // try to connect
-            mqttClient.connect(generateClientId(), cleanStart, keepAliveSeconds);
+            mqttClient.connect(generateClientId(), CLEAN_START, keepAliveSeconds);
 
             // inform the app that the app has successfully connected
             broadcastServiceStatus("Connected");
@@ -486,7 +468,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-    /*
+    /**
      * Send a request to the message broker to be sent messages published with
      *  the specified topic name. Wildcards are allowed.
      */
@@ -521,7 +503,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-    /*
+    /**
      * Terminates a connection to the message broker.
      */
     private void disconnectFromBroker() {
@@ -558,7 +540,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         nm.cancelAll();
     }
 
-    /*
+    /**
      * Checks if the MQTT client thinks it has an active connection
      */
     private boolean isAlreadyConnected() {
@@ -579,7 +561,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
             if (cm.getBackgroundDataSetting()) {
                 // user has allowed background data - we start again - picking
                 //  up where we left off containedIn handleStart before
-                defineConnectionToBroker(brokerHostName);
+                defineConnectionToBroker(BROKER_HOST_NAME);
                 handleStart(intent, 0);
             } else {
                 // user has disabled background data
@@ -598,8 +580,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-
-    /*
+    /**
      * Called containedIn response to a change containedIn network connection - after losing a
      *  connection to the server, this allows us to wait until we have a usable
      *  data connection again
@@ -629,8 +610,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-
-    /*
+    /**
      * Schedule the next time that you want the phone to wake up and ping the
      *  message broker server
      */
@@ -669,8 +649,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
                 pendingIntent);
     }
 
-
-    /*
+    /**
      * Used to implement a keep-alive protocol at this Service level - it sends
      *  a PING message to the server, then schedules another ping after an
      *  interval defined by keepAliveSeconds
@@ -712,13 +691,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
             scheduleNextPing();
         }
     }
-
-
-    /************************************************************************/
-    /*   APP SPECIFIC - stuff that would vary for different uses of MQTT    */
-    /**
-     * ********************************************************************
-     */
 
     //  apps that handle very small amounts of data - e.g. updates and
     //   notifications that don't need to be persisted if the app / phone
@@ -763,14 +735,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
         }
     }
 
-
-    /************************************************************************/
-    /*    METHODS - internal utility methods                                */
-
-    /**
-     * ********************************************************************
-     */
-
     private String generateClientId() {
         // generate a unique client id if we haven't done so before, otherwise
         //   re-use the one we already have
@@ -804,18 +768,11 @@ public class MqttPushRoute implements MqttSimpleCallback {
         return false;
     }
 
-
-    /************************************************************************/
-    /*    METHODS - broadcasts and notifications                            */
-
-    /**
-     * ********************************************************************
-     */
-
     // methods used to notify the Activity UI of something that has happened
     //  so that it can be updated to reflect status and the data received
     //  from the server
     private void broadcastServiceStatus(String statusDescription) {
+        Haru.logI(statusDescription);
         // inform the app (for times when the Activity UI is running /
         //   active) of the current MQTT connection status so that it
         //   can update the UI accordingly
@@ -829,6 +786,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         // pass a message received from the MQTT server on to the Activity UI
         //   (for times when it is running / active) so that it can be displayed
         //   containedIn the app GUI
+        Haru.logI(message);
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(PushService.ACTION_PUSH_RECEIVED);
         broadcastIntent.putExtra(PushService.TOPIC_INTENT_EXTRA, topic);

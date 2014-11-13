@@ -11,6 +11,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+/**
+ * A entity that contains user information.
+ */
 @ClassNameOfEntity(User.CLASS_NAME)
 public class User extends Entity {
 
@@ -54,7 +57,6 @@ public class User extends Entity {
 
         if (entities == null || entities.size() == 0) {
             // not logined. goodbye
-            Log.i("Haru", "Not Logined!");
             return null;
         }
 
@@ -62,6 +64,8 @@ public class User extends Entity {
         Log.i("Haru", "You logined");
         currentUser = (User) entities.get(0);
         currentUser.sessionToken = currentUser.getString("sessionToken");
+        Haru.logD("SessionToken => " + currentUser.sessionToken);
+        Haru.logD("ssaved entity => " + currentUser.toJson());
 
         return currentUser;
     }
@@ -77,6 +81,11 @@ public class User extends Entity {
         else return null;
     }
 
+    /**
+     * 로그인 여부를 반환한다.
+     *
+     * @return 로그인 여부 (boolean)
+     */
     public static boolean isLogined() {
         return getCurrentUser() != null;
     }
@@ -136,7 +145,7 @@ public class User extends Entity {
      * @param callback 회원가입 이후 콜백
      * @return 회원가입 태스크
      */
-    public Task signInInBackground(final LoginCallback callback) {
+    public Task signUpInBackground(final LoginCallback callback) {
 
         final User me = User.this;
 
@@ -147,6 +156,7 @@ public class User extends Entity {
         // password
         try {
             param.put("password", password);
+//            param.put("deviceToken", Installation.getCurrentInstallation().getString("deviceToken"));
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -154,7 +164,7 @@ public class User extends Entity {
             return null;
         }
 
-        Task<HaruResponse> registerTask = Haru.newUserRequest("/users")
+        Task<HaruResponse> registerTask = new HaruRequest("/users")
                 .post(param)
                 .executeAsync();
 
@@ -170,7 +180,6 @@ public class User extends Entity {
                 String sessionToken = response.getJsonBody().getString("sessionToken");
 
                 me.sessionToken = sessionToken;
-                me.put("sessionToken", sessionToken);
 
                 // Retrieve me!
                 setEntityId(userId);
@@ -191,6 +200,7 @@ public class User extends Entity {
 
                 // Set current user to myself
                 currentUser = me;
+                currentUser.put("sessionToken", sessionToken);
 
                 Log.i("Haru", "I got a user => " + currentUser.get("email") + ", sessionToken=" + sessionToken);
 
@@ -216,96 +226,52 @@ public class User extends Entity {
      */
     public static Task logInInBackground(String userName, String pw, final LoginCallback callback) {
         // Write a login request to the user server.
-        HaruRequest.Param param = new HaruRequest.Param();
+        Param param = new Param();
         param.put("username", userName);
         param.put("password", pw);
 
-        Task<HaruResponse> loginTask = Haru.newUserRequest("/login")
+        Task<HaruResponse> loginTask = new HaruRequest("/login")
                 .get(param)
                 .executeAsync();
 
-        return loginTask.onSuccessTask(new Continuation<HaruResponse, Task<Entity>>() {
-            @Override
-            public Task<Entity> then(Task<HaruResponse> task) throws Exception {
-
-                HaruResponse response = task.getResult();
-                if (response.hasError()) {
-                    throw response.getError();
-                }
-
-                // Login succeed. now we have to save current session
-                String userId = response.getJsonBody().getString("_id");
-                String sessionToken = response.getJsonBody().getString("sessionToken");
-
-                // Save some user data - before we fetch
-                currentUser = new User();
-                currentUser.entityId = userId;
-                currentUser.sessionToken = sessionToken;
-
-                // Retrieve user data - to know more about user.
-                return User.retrieveTask(User.class, userId);
-
-            }
-        }, Task.BACKGROUND_EXECUTOR).continueWith(new Continuation<Entity, User>() {
-            @Override
-            public User then(Task<Entity> task) throws Exception {
-
-                if (task.isFaulted()) {
-                    // Exception? just log and throw it
-                    Exception e = task.getError();
-                    e.printStackTrace();
-                    callback.done(null, new HaruException(e));
-                    throw e;
-                }
-
-                // Fill the more information about user
-                Entity fetchResult = task.getResult();
-                currentUser.entityData = fetchResult.entityData;
-                currentUser.createdAt = fetchResult.createdAt;
-                currentUser.updatedAt = fetchResult.updatedAt;
-
-                // Save current user
-                LocalEntityStore.deleteTagFromLocal(CLASS_NAME, CURRENT_USER_TAG);
-                LocalEntityStore.saveEntity(currentUser, CURRENT_USER_TAG);
-
-                // Call LoginCallback
-                callback.done(currentUser, null);
-
-                // pass the result
-                return currentUser;
-
-            }
-        }, Task.UI_THREAD_EXECUTOR);
+        return doLogIn(loginTask, callback);
     }
 
+    /**
+     * Social Login.
+     *
+     * @param socialProvider Social Service name (ex: facebook, kakao...)
+     * @param userId A user's UUID from the social service
+     * @param accessToken OAuth access token from the social service
+     * @param callback A callback to call after login process finished
+     * @return Login Task
+     */
     public static Task socialLogin(String socialProvider,
                             String userId,
                             String accessToken,
                             final LoginCallback callback) {
 
-        // { deviceToken: 123, authData: { facebook: { ... }}} Format
-        JSONObject request = new JSONObject();
-        try {
-            request.put("deviceToken",
-                    Installation.getCurrentInstallation().getString("deviceToken"));
+        // Make request
+        Param request = new Param();
+        request.put("deviceToken", Installation.getCurrentInstallation().getString("deviceToken"));
 
-            JSONObject providerInfo = new JSONObject();
-            providerInfo.put("id", userId);
-            providerInfo.put("access_token", accessToken);
+        Param providerInfo = new Param();
+        request.put("id", userId);
+        request.put("access_token", accessToken);
 
-            JSONObject authData = new JSONObject();
-            authData.put(socialProvider, providerInfo);
-            request.put("authData", authData);
+        Param authData = new Param();
+        authData.put(socialProvider, providerInfo);
+        request.put("authData", authData);
 
-        } catch (JSONException e) {
-            callback.done(null, new HaruException(e));
-        }
-
-        Task<HaruResponse> socialLoginTask = Haru.newUserRequest("/users")
+        Task<HaruResponse> socialLoginTask = new HaruRequest("/users")
                 .post(request)
                 .executeAsync();
 
-        return socialLoginTask.onSuccessTask(new Continuation<HaruResponse, Task<Entity>>() {
+        return doLogIn(socialLoginTask, callback);
+    }
+
+    private static Task doLogIn(Task<HaruResponse> loginRequestTask, final LoginCallback callback) {
+        return loginRequestTask.onSuccessTask(new Continuation<HaruResponse, Task<Entity>>() {
             @Override
             public Task<Entity> then(Task<HaruResponse> task) throws Exception {
 
@@ -341,6 +307,7 @@ public class User extends Entity {
 
                 // Fill the more information about user
                 Entity fetchResult = task.getResult();
+                currentUser.put("sessionToken", currentUser.sessionToken);
                 currentUser.entityData = fetchResult.entityData;
                 currentUser.createdAt = fetchResult.createdAt;
                 currentUser.updatedAt = fetchResult.updatedAt;
@@ -361,12 +328,13 @@ public class User extends Entity {
 
     /**
      * 현재 유저를 로그아웃시킨다.
+     *
      * @return 로그아웃 태스크 (서버로의)
      */
     public static Task logOutInBackground() {
 
         // Logout request to user server.
-        Task<HaruResponse> logoutTask = Haru.newUserRequest("/logout/me").executeAsync();
+        Task<HaruResponse> logoutTask = new HaruRequest("/logout/me").executeAsync();
 
         // Remove from local
         LocalEntityStore.deleteTagFromLocal(CLASS_NAME, CURRENT_USER_TAG);

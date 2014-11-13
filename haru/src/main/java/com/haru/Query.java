@@ -255,9 +255,9 @@ public class Query {
     }
 
     public void findAll(final FindCallback callback) {
-        HaruRequest.Param param = new HaruRequest.Param();
+        Param param = new Param();
         param.put("where", mainQueryObject.toString());
-        Task<HaruResponse> findTask = Haru.newApiRequest("/classes/" + className)
+        Task<HaruResponse> findTask = new HaruRequest("/classes/" + className)
                 .get(param)
                 .executeAsync();
 
@@ -294,9 +294,9 @@ public class Query {
     }
 
     public void findOne(final GetCallback callback) {
-        HaruRequest.Param param = new HaruRequest.Param();
+        Param param = new Param();
         param.put("where", mainQueryObject.toString());
-        Task<HaruResponse> findTask = Haru.newApiRequest("/classes/" + className)
+        Task<HaruResponse> findTask = new HaruRequest("/classes/" + className)
                 .get(param)
                 .executeAsync();
 

@@ -1,14 +1,7 @@
-/*
- *  Copyright (c) 2014, Facebook, Inc.
- *  All rights reserved.
- *
- *  This source code is licensed under the BSD-style license found in the
- *  LICENSE file in the root directory of this source tree. An additional grant 
- *  of patent rights can be found in the PATENTS file in the same directory.
- *
- */
+
 package com.haru.task;
 
+import java.util.LinkedList;
 import java.util.Queue;
 
 /**
@@ -19,10 +12,26 @@ public class TaskQueue {
     private Queue<Task> taskQueue;
 
     public TaskQueue() {
+        taskQueue = new LinkedList<Task>();
     }
 
-    private void enqueue(Task task) {
+    public void enqueue(Task task) {
+        if (!taskQueue.isEmpty()) {
+            taskQueue.peek().continueWithTask(new Continuation<Object, Task>() {
+                @Override
+                public Task then(Task task) throws Exception {
+                    return taskQueue.peek();
+                }
+            });
+        }
+
+        taskQueue.offer(task.continueWith(new Continuation() {
+            @Override
+            public Object then(Task task) throws Exception {
+                if (task.isFaulted()) throw task.getError();
+                taskQueue.poll();
+                return task.getResult();
+            }
+        }));
     }
-
-
 }

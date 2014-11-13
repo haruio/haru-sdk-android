@@ -2,10 +2,10 @@ package com.haru;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.NetworkOnMainThreadException;
 import android.util.Log;
 
 import com.haru.callback.ResponseCallback;
+import com.haru.mime.HttpMultipartMode;
 import com.haru.mime.MultipartEntity;
 import com.haru.mime.ProgressOutputStream;
 import com.haru.mime.content.FileBody;
@@ -21,7 +21,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.HttpClientParams;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.entity.StringEntity;
@@ -33,28 +32,17 @@ import org.apache.http.params.HttpParams;
 
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class HaruRequest {
 
-    private static final String USER_AGENT = "Haru SDK " + Haru.getSdkVersion()
-            + " / Android " + Build.VERSION.RELEASE;
+    private static final String HARU_ENDPOINT = "http://api.haru.io/1";
+
+    private static final String USER_AGENT =
+            "Haru SDK " + Haru.getSdkVersion() + " / Android " + Build.VERSION.RELEASE;
 
     private static HttpClient defaultClient;
     private static String appKey, sdkKey;
@@ -70,74 +58,11 @@ public class HaruRequest {
     private ProgressOutputStream.ProgressListener progressListener;
 
     /**
-     * POST, PUT, DELETE 메서드의 파라미터를 작성할 때 사용된다.
-     */
-    public static class Param {
-        private HashMap<String, String> paramMap = new HashMap<String, String>();
-
-        public Param() {
-
-        }
-
-        public void put(String key, String value) {
-            paramMap.put(key, value);
-        }
-
-        public void put(String key, int value) {
-            put(key, String.valueOf(value));
-        }
-
-        public void put(String key, double value) {
-            put(key, String.valueOf(value));
-        }
-
-        public void put(String key, boolean value) {
-            put(key, String.valueOf(value));
-        }
-
-        public void put(String key, long value) {
-            put(key, String.valueOf(value));
-        }
-
-        public void put(String key, List<String> value) {
-            put(key, new JSONArray(value).toString());
-        }
-
-        /**
-         * 파라미터들을 JSONObject로 변환한다.
-         * @return JSONObject
-         */
-        JSONObject toJSON() {
-            return new JSONObject(paramMap);
-        }
-
-        /**
-         * 파라미터들을 URL Encoding된 포맷으로 변환한다. (param1=name&param2=name)
-         * @return String (URL Encoded UTF-8)
-         */
-        String toUrl() {
-            try {
-                StringBuilder query = new StringBuilder();
-                Iterator iter = paramMap.entrySet().iterator();
-                while (iter.hasNext()) {
-                    Map.Entry entry = (Map.Entry) iter.next();
-                    query.append(entry.getKey() + "="
-                            + URLEncoder.encode((String) entry.getValue(), "utf-8") + "&");
-                }
-                return query.toString();
-
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e.getMessage());
-            }
-        }
-    }
-
-    /**
      * HaruRequest를 초기화시킨다.
      */
     static void initialize(Context context) {
         if (defaultClient == null) {
-            defaultClient = newHttpClient(context);
+            defaultClient = initiateApacheHttpClient(context);
         }
 
         appKey = Haru.getAppKey();
@@ -148,7 +73,7 @@ public class HaruRequest {
      * HaruRequest의 기본값으로 HTTP Client를 생성한다.
      * @return HTTP Client
      */
-    private static HttpClient newHttpClient(Context context) {
+    private static HttpClient initiateApacheHttpClient(Context context) {
         HttpParams params = new BasicHttpParams();
 
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -175,17 +100,13 @@ public class HaruRequest {
                 new DefaultHttpClient().getConnectionManager().getSchemeRegistry()), params);
     }
 
-    public static HttpClient getDefaultHttpClient() {
-        return defaultClient;
-    }
-
     public HaruRequest() {
         client = defaultClient;
     }
 
     public HaruRequest(String url) {
-        client = defaultClient;
-        endpoint = url;
+        this();
+        endpoint = HARU_ENDPOINT + url;
     }
 
     /**
@@ -214,18 +135,17 @@ public class HaruRequest {
                     case 0: // GET
                         String url = endpoint;
                         if (getParam != null) url += "?" + getParam.toUrl();
-                        Log.d("Haru", "Requests => " + url);
+                        Log.d("Haru", "  GET Requests => " + url);
                         request = new HttpGet(url);
                         break;
 
                     case 1: // POST
-                        Log.d("Haru", "Request => " + param.toString());
                         request = new HttpPost(endpoint);
 
                         // Multipart Upload인가?
                         if (file != null) {
-                            MultipartEntity multipart = new MultipartEntity();
-                            multipart.addPart(file.getName(), new FileBody(file));
+                            MultipartEntity multipart = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+                            multipart.addPart("file", new FileBody(file));
 
                             // Progress Callback 설정
                             if (progressListener != null) multipart.setProgressListener(progressListener);
@@ -233,6 +153,7 @@ public class HaruRequest {
                             ((HttpPost) request).setEntity(multipart);
 
                         } else {
+                            Log.d("Haru", "Request => " + param.toString());
                             ((HttpPost) request).setEntity(new StringEntity(param.toString(), "utf-8"));
                         }
                         break;
@@ -270,7 +191,8 @@ public class HaruRequest {
 
                 // Read the response
                 String body = EntityUtils.toString(response.getEntity(), "utf-8");
-                Log.d("Haru", "Response => " + body);
+                Haru.logD(endpoint + " Response => " + body);
+//              Haru.logD("Response => " + body);
 
                 return new HaruResponse(response, new JSONObject(body));
 
@@ -278,14 +200,8 @@ public class HaruRequest {
         }).continueWith(new Continuation<HaruResponse, HaruResponse>() {
             @Override
             public HaruResponse then(Task<HaruResponse> task) throws Exception {
-                if (task.isFaulted()) {
-                    Haru.stackTrace(task.getError());
-                    throw task.getError();
-
-                } else if (task.isCompleted()) {
-                    return task.getResult();
-                }
-                return null;
+                if (task.isFaulted()) throw task.getError();
+                return task.getResult();
             }
         }, Task.UI_THREAD_EXECUTOR);
     }
@@ -327,6 +243,7 @@ public class HaruRequest {
     }
 
     public HaruRequest post(File file) {
+        setMethod(1);
         this.file = file;
         return this;
     }
@@ -348,7 +265,7 @@ public class HaruRequest {
     }
 
     public void setParameter(Param param) {
-        this.param = param.toJSON();
+        this.param = (JSONObject) param.toJson();
     }
 
     public void setParameter(JSONObject param) {

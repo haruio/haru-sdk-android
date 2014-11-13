@@ -1,12 +1,15 @@
 package com.haru.push;
 
+import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.haru.Haru;
+import com.haru.HaruRequest;
 import com.haru.Installation;
+import com.haru.Param;
 import com.haru.PushService;
 import com.haru.Query;
 import com.haru.task.Task;
@@ -26,18 +29,108 @@ public class Push implements Parcelable {
 
     private int type;
     private ArrayList<String> channels;
-    private JSONObject extras;
+    private Param extras;
     private String title="", message="";
     private String query;
 
-    private static Context staticContext;
+    public static class MessageBuilder {
+        private ArrayList<String> channels;
+        private Param extras;
+        private String message;
+        private String query;
 
-    public class MessageBuilder {
+        public MessageBuilder() {
+            extras = new Param();
+        }
 
+        public MessageBuilder setMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public MessageBuilder setQuery(String query) {
+            this.query = query;
+            return this;
+        }
+
+        public MessageBuilder putExtra(String key, Object value) {
+            extras.put(key, value);
+            return this;
+        }
+
+        public MessageBuilder setChannels(ArrayList<String> channels) {
+            this.channels = channels;
+            return this;
+        }
+
+        public MessageBuilder setChannel(String channel) {
+            this.channels = new ArrayList<String>();
+            channels.add(channel);
+            return this;
+        }
+
+        public Push build() {
+            Push push = new Push();
+            push.type = Push.TYPE_MESSAGE;
+            push.channels = channels;
+            push.message = message;
+            push.extras = extras;
+            push.query = query;
+            return push;
+        }
     }
 
-    public class NotificationBuilder {
+    public static class NotificationBuilder {
+        private ArrayList<String> channels;
+        private Param extras;
+        private String title;
+        private String message;
+        private String query;
 
+        public NotificationBuilder() {
+            extras = new Param();
+        }
+
+        public NotificationBuilder setTitle(String title) {
+            this.title = title;
+            return this;
+        }
+
+        public NotificationBuilder setMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public NotificationBuilder setQuery(String query) {
+            this.query = query;
+            return this;
+        }
+
+        public NotificationBuilder putExtra(String key, Object value) {
+            extras.put(key, value);
+            return this;
+        }
+
+        public NotificationBuilder setChannels(ArrayList<String> channels) {
+            this.channels = channels;
+            return this;
+        }
+
+        public NotificationBuilder setChannel(String channel) {
+            this.channels = new ArrayList<String>();
+            channels.add(channel);
+            return this;
+        }
+
+        public Push build() {
+            Push push = new Push();
+            push.type = Push.TYPE_NOTIFICATION;
+            push.channels = channels;
+            push.message = message;
+            push.extras = extras;
+            push.query = query;
+            return push;
+        }
     }
 
     @Override
@@ -50,8 +143,10 @@ public class Push implements Parcelable {
      * @param context Application Context
      */
     public static void init(Context context) {
-        staticContext = context;
         PushService.startIfRequired(context);
+    }
+
+    private Push() {
     }
 
     /**
@@ -69,7 +164,9 @@ public class Push implements Parcelable {
      * @param channels 수신할 채널 목록
      */
     public static void subscribe(List<String> channels) {
-
+        Installation currentInstallation = Installation.getCurrentInstallation();
+        currentInstallation.addChannels(channels);
+        currentInstallation.saveInBackground();
     }
 
 
@@ -80,7 +177,7 @@ public class Push implements Parcelable {
         try {
             type = in.readInt();
             in.readStringList(channels);
-            extras = new JSONObject(in.readString());
+            extras = Param.fromJson(new JSONObject(in.readString()));
             title = in.readString();
             message = in.readString();
             query = in.readString();
@@ -99,9 +196,7 @@ public class Push implements Parcelable {
     public void writeToParcel(Parcel out, int i) {
         out.writeInt(type);
         out.writeStringList(channels);
-        if (extras != null) {
-            out.writeString(extras.toString());
-        }
+        out.writeString(extras.toString());
         out.writeString(title);
         out.writeString(message);
         out.writeString(query);
@@ -141,26 +236,20 @@ public class Push implements Parcelable {
     }
 
     public void sendInBackground() {
-        try {
+        Param params = new Param();
+        if (query != null) params.put("where", query);
+        if (channels != null) params.put("channels", new JSONArray(channels));
+        if (extras != null) params.put("extras", extras);
 
-            JSONObject params = new JSONObject();
-            if (query != null) params.put("where", query);
-            if (channels != null) params.put("channels", new JSONArray(channels));
-            if (extras != null) params.put("extras", extras);
+        Param data = new Param();
+        data.put("message", message);
+        if (title != null) data.put("title", title);
+        params.put("data", data);
 
-            JSONObject data = new JSONObject();
-            data.put("message", message);
-            if (title != null) data.put("title", title);
-            params.put("data", data);
+        Task pushTask = new HaruRequest("/push")
+                .post(params)
+                .executeAsync();
 
-            Task pushTask = Haru.newPushRequest("/push")
-                    .post(params)
-                    .executeAsync();
-
-            // TODO: 다으으음!!!
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        // TODO: 다으으음!!!
     }
 }

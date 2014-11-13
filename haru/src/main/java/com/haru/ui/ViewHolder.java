@@ -17,10 +17,19 @@ public class ViewHolder {
         }
     }
 
-    public View getView() {
+    /**
+     * Returns the original view.
+     * @return View
+     */
+    public View getHoldedView() {
         return view;
     }
 
+    /**
+     * Find the view from ViewHolder.
+     * @param id The view's Resource ID
+     * @return The view
+     */
     public <T extends View> T findViewById(int id) {
         View childView = viewHolder.get(id);
         if (childView == null) {

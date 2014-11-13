@@ -25,7 +25,7 @@ public final class Installation extends Entity {
     private static Installation currentInstallation;
 
     /**
-     * Cannot initiate from other place - the installation is must be only one.
+     * Cannot initiate from other place - the installation must be only one.
      */
     Installation() {
         super(CLASS_NAME);
@@ -137,6 +137,7 @@ public final class Installation extends Entity {
             mUUID = deviceUuid.toString();
         }
         put("deviceToken", mUUID);
+        Haru.logI("deviceToken : %s", mUUID);
     }
 
     public static Installation getCurrentInstallation() {

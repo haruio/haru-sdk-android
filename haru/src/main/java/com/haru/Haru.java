@@ -112,46 +112,35 @@ public class Haru {
             // to convert JSON values to actual types.
             // Try to parse name
             try {
-                Haru.logD("JSON %s : Double?", key);
                 value = json.getDouble(key);
 
             } catch (Exception e) {
-
                 try {
-                    Haru.logD("JSON %s : Long?", key);
                     value = json.getLong(key);
 
                 } catch (JSONException le) {
                     try {
-                        Haru.logD("JSON %s : Integer?", key);
                         value = json.getInt(key);
 
                     } catch (JSONException ie) {
-                        // it's probably a boolean?
                         try {
-                            Haru.logD("JSON %s : Bool?", key);
                             value = json.getBoolean(key);
 
                         } catch (JSONException je) {
-                            // or JSONArray?
                             try {
                                 // TODO: Nested array 처리
-                                Haru.logD("JSON %s : Array?", key);
                                 value = json.getJSONArray(key);
 
                             } catch (JSONException jee) {
                                 // or JSONObject?
                                 try {
-                                    Haru.logD("JSON %s : JSON?", key);
                                     JSONObject nestedJson = json.getJSONObject(key);
                                     Map<String, Object> nestedMap = new HashMap<String, Object>();
                                     convertJsonToMap(nestedJson, nestedMap);
                                     value = nestedMap;
 
                                 } catch (JSONException jeee) {
-                                    // okay, it's just a string...
                                     try {
-                                        Haru.logD("JSON %s : String!", key);
                                         value = json.getString(key);
 
                                     } catch (JSONException j) {
@@ -197,10 +186,10 @@ public class Haru {
 
     public static void stackTrace(Exception e) {
         if (IS_DEBUG_BUILD) {
-            Haru.logD(e.getMessage());
+            Log.e(TAG, e.getMessage());
             StackTraceElement[] traces = e.getStackTrace();
             for (StackTraceElement elem : traces) {
-                Haru.logD(elem.toString());
+                Log.e(TAG, "    " + elem.toString());
             }
         }
     }
@@ -212,6 +201,4 @@ public class Haru {
     public static void logI(String message, Object ...args) {
         Log.i(TAG, String.format(message, args));
     }
-
-
 }

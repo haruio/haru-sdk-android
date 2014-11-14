@@ -256,8 +256,8 @@ public class User extends Entity {
         request.put("deviceToken", Installation.getCurrentInstallation().getString("deviceToken"));
 
         Param providerInfo = new Param();
-        request.put("id", userId);
-        request.put("access_token", accessToken);
+        providerInfo.put("id", userId);
+        providerInfo.put("access_token", accessToken);
 
         Param authData = new Param();
         authData.put(socialProvider, providerInfo);

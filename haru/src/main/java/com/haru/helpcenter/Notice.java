@@ -39,11 +39,11 @@ public class Notice {
     static Notice fromJson(JSONObject json) {
         try {
             Notice notice = new Notice();
-            notice.noticeId  = json.getString("Id");
-            notice.title     = json.getString("Title");
-            notice.body      = json.getString("Body");
-            notice.createdAt = new Date(json.getLong("Time"));
-            notice.imageUrl  = json.getString("URL");
+            notice.noticeId  = json.getString("_id");
+            notice.title     = json.getString("title");
+            notice.body      = json.getString("body");
+            notice.createdAt = new Date(json.getLong("time"));
+            notice.imageUrl  = json.getString("url");
             return notice;
 
         } catch (JSONException e) {

@@ -31,7 +31,7 @@ public class HelpCenter {
     public static Task getNoticeList(final GetNoticeCallback callback) {
 
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("/notice/list")
+        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/notice/list")
                 .get()
                 .executeAsync();
 
@@ -70,18 +70,20 @@ public class HelpCenter {
         });
     }
 
+    public static Task sendQuestion(String email, String question) {
+        return sendQuestion(email, question, null);
+    }
+
     public static Task sendQuestion(String email,
-                                    String category,
                                     String question,
                                     final SaveCallback callback) {
 
         Param param = new Param();
         param.put("emailaddress", email);
-        param.put("category", category);
         param.put("body", question);
 
         // request to help center server
-        Task<HaruResponse> addQnaTask = new HaruRequest("/qna/add")
+        Task<HaruResponse> addQnaTask = new HaruRequest("http://stage.haru.io:3000" + "/qna/add")
                 .post(param)
                 .executeAsync();
 
@@ -92,18 +94,18 @@ public class HelpCenter {
                 // error handling
                 if (task.isFaulted()) {
                     Haru.stackTrace(task.getError());
-                    callback.done(new HaruException(task.getError()));
+                    if (callback != null) callback.done(new HaruException(task.getError()));
                     throw task.getError();
 
                 } else if (task.getResult().hasError()) {
                     Exception e = task.getResult().getError();
                     Haru.stackTrace(e);
-                    callback.done(new HaruException(e));
+                    if (callback != null) callback.done(new HaruException(e));
                     throw e;
                 }
 
                 // callback
-                callback.done(null);
+                if (callback != null) callback.done(null);
 
                 return task.getResult();
             }
@@ -114,7 +116,7 @@ public class HelpCenter {
                                                    final GetFAQCallback callback) {
 
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("/faq/list/" + categoryName)
+        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/faq/list/" + categoryName)
                 .get()
                 .executeAsync();
 
@@ -155,7 +157,7 @@ public class HelpCenter {
 
     public static Task getFaqCategories(final GetCategoryCallback callback) {
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("/faq/category/list")
+        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/faq/category/list")
                 .get()
                 .executeAsync();
 
@@ -183,7 +185,7 @@ public class HelpCenter {
                 // Make list
                 ArrayList<String> categories = new ArrayList<String>();
                 for (int i = 0; i < resultsArray.length(); i++) {
-                    categories.add(resultsArray.getJSONObject(i).getString("Category"));
+                    categories.add(resultsArray.getJSONObject(i).getString("category"));
                 }
 
                 // callback

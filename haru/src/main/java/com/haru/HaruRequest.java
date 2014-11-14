@@ -106,7 +106,8 @@ public class HaruRequest {
 
     public HaruRequest(String url) {
         this();
-        endpoint = HARU_ENDPOINT + url;
+        if (url.startsWith("http")) endpoint = url;
+        else endpoint = Haru.urlJoin(HARU_ENDPOINT, url);
     }
 
     /**
@@ -191,8 +192,7 @@ public class HaruRequest {
 
                 // Read the response
                 String body = EntityUtils.toString(response.getEntity(), "utf-8");
-                Haru.logD(endpoint + " Response => " + body);
-//              Haru.logD("Response => " + body);
+                Haru.logD("%s : Response => %s", endpoint, body);
 
                 return new HaruResponse(response, new JSONObject(body));
 

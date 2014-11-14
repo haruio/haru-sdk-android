@@ -1,7 +1,11 @@
 <resources>
 
-    <style name="BaseTheme" parent="android:Theme.Material.NoActionBar">
+    <style name="Haru.Theme" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">#242424</item>
+    </style>
+
+    <style name="Haru.Theme.Light" parent="android:Theme.Material.Light.DarkActionBar">
+
     </style>
 
 </resources>

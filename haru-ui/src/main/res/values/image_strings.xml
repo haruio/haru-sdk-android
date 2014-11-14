@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Image chooser -->
+    <string name="haru_chooser_title">Choose an option</string>
+    <string name="haru_chooser_gallery">Choose from Gallery</string>
+    <string name="haru_chooser_take_picture">Take a picture</string>
+    <string name="haru_chooser_take_video">Take a video</string>
+
+    <string name="haru_crop_saving">Saving picture…</string>
+    <string name="haru_crop_wait">Please wait…</string>
+    <string name="haru_crop_pick_error">No image sources available</string>
+
+</resources>

@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              style="@style/Crop.DoneCancelBar">
+
+    <ImageButton
+        android:id="@+id/btn_cancel"
+        android:src="@drawable/haru_crop_ic_cancel"
+        style="@style/Crop.ActionButton" />
+
+    <ImageButton
+        android:id="@+id/btn_done"
+        android:src="@drawable/haru_crop_ic_done"
+        style="@style/Crop.ActionButton" />
+
+</LinearLayout>

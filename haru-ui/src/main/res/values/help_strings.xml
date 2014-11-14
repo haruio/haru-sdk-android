@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="haru_help_center_padding">16dp</dimen>
+    <string name="haru_help_center">Help Center</string>
+
 </resources>

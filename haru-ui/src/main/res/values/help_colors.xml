@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="haru_help_center_padding">16dp</dimen>
+    <color name="haru_help_background">#EEEEEE</color>
 </resources>

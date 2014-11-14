@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Login Fields -->
+    <string name="haru_field_username">User Name</string>
+    <string name="haru_field_email">Email</string>
+    <string name="haru_field_password">Password</string>
+    <string name="haru_field_password_repeat">Repeat password</string>
+
+    <!-- Log In -->
+    <string name="haru_log_in">Log In</string>
+    <string name="haru_log_in_cap">LOG IN</string>
+
+    <!-- Sign up -->
+    <string name="haru_sign_up">Sign Up</string>
+    <string name="haru_sign_up_cap">SIGN UP</string>
+
+    <!-- Forgot password -->
+    <string name="haru_forgot_password_title">Enter your email to find your password</string>
+    <string name="haru_forgot_password">FORGOT YOUR PASSWORD?</string>
+    <string name="haru_submit">SUBMIT</string>
+
+    <!-- Errors -->
+    <string name="haru_error_invalid_email">This email address is invalid</string>
+    <string name="haru_error_invalid_password">This password is too short</string>
+    <string name="haru_error_incorrect_password">This password is incorrect</string>
+    <string name="haru_error_field_required">This field is required</string>
+
+</resources>

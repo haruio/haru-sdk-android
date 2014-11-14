@@ -1,7 +1,11 @@
 <resources>
 
-    <style name="BaseTheme" parent="android:Theme.Holo.NoActionBar">
+    <style name="Haru.Theme" parent="android:Theme.Holo.NoActionBar">
         <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <style name="Haru.Theme.Light" parent="android:Theme.Holo.Light">
+
     </style>
 
 </resources>

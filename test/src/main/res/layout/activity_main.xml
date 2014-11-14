@@ -9,12 +9,103 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <ListView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="#404040"
-        android:dividerHeight="1dp"
-        android:id="@+id/listView"
-        android:layout_weight="1.0" />
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/entity_test_btn"
+                android:text="ENTITY TEST PAGE" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/user_test_btn"
+                android:text="USER TEST PAGE" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/config_test_btn"
+                android:text="GET ALL CONFIG" />
+
+
+            <TextView
+                style="@style/TestMenuCategory"
+                android:text="PUSH" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/push_msg_btn"
+                android:text="SEND PUSH MESSAGE" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/push_noti_btn"
+                android:text="SEND PUSH NOTIFICATION" />
+
+
+            <TextView
+                style="@style/TestMenuCategory"
+                android:text="FILE" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/file_list_btn"
+                android:text="FILE LISTS" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/file_upload_sample_btn"
+                android:text="SAMPLE TEXT UPLOAD TEST" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/file_upload_image_btn"
+                android:text="UPLOAD IMAGE..." />
+
+
+            <TextView
+                style="@style/TestMenuCategory"
+                android:text="HELP CENTER" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/helpcenter_faq_btn"
+                android:text="FAQ LIST" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/helpcenter_send_question_btn"
+                android:text="SEND QUESTION" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/helpcenter_notice_btn"
+                android:text="NOTICE LIST" />
+
+            <TextView
+                style="@style/TestMenuCategory"
+                android:text="ADVANCED" />
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/api_test_btn"
+                android:text="SERVER API TEST CONSOLE" />
+
+
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/reset_btn"
+                android:text="RESET ALL DATA" />
+
+        </LinearLayout>
+    </ScrollView>
+
+
 
 </LinearLayout>

@@ -1,8 +1,9 @@
-package com.haru.examplememo;
+package com.haru.test;
 
 import android.app.Application;
 import android.util.Log;
 
+import com.haru.Config;
 import com.haru.Haru;
 import com.haru.push.Push;
 
@@ -15,8 +16,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Log.e("Haru", "===========================================================================");
-
         Haru.init(this, APP_KEY, SDK_KEY);
         Push.init(this);
+        Config.loadInBackground();
     }
 }

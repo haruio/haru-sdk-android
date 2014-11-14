@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.haru.examplememo" >
+    package="com.haru.test" >
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
-        android:name="com.haru.examplememo.App"
+        android:name="com.haru.test.App"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
         <activity
-            android:name="com.haru.examplememo.LoginActivity"
-            android:theme="@style/LoginTheme"
+            android:name="com.haru.test.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,22 +25,26 @@
             </intent-filter>
         </activity>
 
-        <activity android:label="Memo"
-            android:name=".MainActivity" />
+        <activity android:name=".UserActivity"
+            android:label="Current user" />
 
-        <activity android:name=".EmailLoginActivity"
-            android:label="Login with email" />
+        <activity android:name="com.haru.ui.login.LoginActivity" />
 
-        <activity android:name=".SignInActivity"
-            android:label="Register Account" />
+
+        <activity android:label="Manage Entity"
+            android:name="com.haru.test.EntityActivity" />
+
+        <activity android:label="FAQ"
+            android:name="com.haru.test.HelpCenterFaqActivity" />
+
+        <activity android:label="Notices"
+            android:name="com.haru.test.HelpCenterNoticeActivity" />
 
         <service android:name="com.haru.PushService"
             android:enabled="true"
             android:exported="true" />
 
-        <receiver android:name="com.haru.push.PushReceiver"
-            android:enabled="true"
-            android:exported="true" />
+        <receiver android:name=".TestPushReceiver" />
 
         <meta-data android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
@@ -49,6 +54,8 @@
             android:configChanges="orientation|screenSize"/>
 
         <activity android:name="com.facebook.LoginActivity"/>
+
+        <activity android:name="com.haru.ui.helpcenter.HelpCenterActivity" />
 
         <!-- 3 -->
         <meta-data

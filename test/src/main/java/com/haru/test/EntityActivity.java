@@ -1,4 +1,4 @@
-package com.haru.examplememo;
+package com.haru.test;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -7,49 +7,51 @@ import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.haru.Entity;
+import com.haru.Haru;
 import com.haru.HaruException;
-import com.haru.ui.PageAdapter;
+import com.haru.ui.PagedEntityAdapter;
 import com.haru.callback.DeleteCallback;
 import com.haru.callback.SaveCallback;
 import com.haru.ui.ViewHolder;
 
-public class MainActivity extends ActionBarActivity {
+public class EntityActivity extends ActionBarActivity {
 
-    private PageAdapter adapter;
+    private String CLASS_NAME = "TestEntities";
+    private PagedEntityAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_entity);
 
         // 리스트 초기화
-        ListView listView = (ListView) findViewById(R.id.listView);
+        ListView listView = (ListView) findViewById(R.id.entity_list);
 
         // PageAdapter 초기화
-        adapter = new PageAdapter(this, "TestArticle", R.layout.elem);
-        adapter.setOnViewRenderListener(new PageAdapter.OnViewRenderListener() {
+        adapter = new PagedEntityAdapter(this, CLASS_NAME, R.layout.elem);
+        adapter.setOnViewRenderListener(new PagedEntityAdapter.OnViewRenderListener() {
             @Override
-            public void onViewRender(int index, Entity article, View view) {
+            public void onViewRender(int index, Entity entity, View view) {
 
                 ViewHolder holder = new ViewHolder(view);
                 TextView listTitle = holder.findViewById(R.id.listTitle),
                         updatedAt = holder.findViewById(R.id.listUpdatedAt);
 
-                listTitle.setText(article.getString("title"));
+                listTitle.setText(entity.getString("content"));
 
                 updatedAt.setText(DateUtils.getRelativeTimeSpanString(
-                        article.getUpdatedAt().getTime(),
+                        entity.getUpdatedAt().getTime(),
                         System.currentTimeMillis(),
                         DateUtils.MINUTE_IN_MILLIS,
                         DateUtils.FORMAT_ABBREV_RELATIVE));
@@ -57,26 +59,41 @@ public class MainActivity extends ActionBarActivity {
         });
         listView.setAdapter(adapter);
 
-
-/*
-        User user = new User();
-        user.setUserName("retail3210");
-        user.setEmail("retail3210@gmail.com");
-        user.setPassword("1234");
-        user.signInInBackground(new LoginCallback() {
+        //
+        final EditText contentEdit = (EditText) findViewById(R.id.content_edit);
+        final Button contentWrite = (Button) findViewById(R.id.content_write);
+        contentWrite.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void done(User user, HaruException error) {
-                if (error != null) {
-                    Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-                    error.printStackTrace();
-                    return;
-                }
+            public void onClick(View view) {
+                String content = contentEdit.getText().toString();
 
-                Toast.makeText(MainActivity.this, user.getId(), Toast.LENGTH_SHORT).show();
+                // Save
+                final Entity entity = new Entity(CLASS_NAME);
+                entity.put("content", content);
+                entity.saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(HaruException exception) {
+                        if (exception != null) {
+                            Haru.stackTrace(exception);
+                            return;
+                        }
+
+                        // Notify to user
+                        Toast.makeText(EntityActivity.this,
+                                "Saved Entity Id : " + entity.getId(),
+                                Toast.LENGTH_SHORT).show();
+
+                        // Update
+                        adapter.refreshInBackground();
+                    }
+                });
+
+                // Clear edittext
+                contentEdit.setText("");
             }
-        });*/
+        });
 
-        // 길게 눌렀을 시 삭제
+        // delete on longpress
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, final int index, long l) {
@@ -92,12 +109,12 @@ public class MainActivity extends ActionBarActivity {
      */
     private void deleteItem(final Entity entity) {
         final ArrayAdapter<String> menuAdapter = new ArrayAdapter<String>(
-                MainActivity.this,
+                EntityActivity.this,
                 android.R.layout.simple_list_item_1,
-                new String[]{"오프라인", "취소"}
+                new String[]{"Make offline", "Delete entity"}
         );
 
-        AlertDialog dialog = new AlertDialog.Builder(MainActivity.this)
+        AlertDialog dialog = new AlertDialog.Builder(EntityActivity.this)
                 .setAdapter(menuAdapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -113,7 +130,7 @@ public class MainActivity extends ActionBarActivity {
                                     toast(exception.getMessage());
                                 }
                                 adapter.notifyDataSetChanged();
-                                toast("삭제되었습니다.");
+                                toast("Deleted.");
                             }
                         });
                     }
@@ -134,11 +151,6 @@ public class MainActivity extends ActionBarActivity {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -158,7 +170,7 @@ public class MainActivity extends ActionBarActivity {
                         public void onClick(DialogInterface dialogInterface, int i) {
 
                             // 엔티티를 저장한다.
-                            final Entity entity = new Entity("TestArticle");
+                            final Entity entity = new Entity(CLASS_NAME);
                             entity.put("title", title.getText().toString());
                             entity.put("body", body.getText().toString());
                             entity.saveInBackground(new SaveCallback() {

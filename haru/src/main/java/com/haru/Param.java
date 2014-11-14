@@ -25,11 +25,11 @@ public class Param implements JsonEncodable {
     }
 
     public void put(String key, Param value) {
-        paramMap.put(key, value.toJson().toString());
+        paramMap.put(key, value.toJson());
     }
 
     public void put(String key, List value) {
-        put(key, new JSONArray(value).toString());
+        put(key, new JSONArray(value));
     }
 
     /**

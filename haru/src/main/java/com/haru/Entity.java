@@ -1,5 +1,8 @@
 package com.haru;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.haru.callback.DeleteCallback;
 import com.haru.callback.SaveCallback;
 import com.haru.task.Continuation;
@@ -7,6 +10,7 @@ import com.haru.task.Task;
 import com.haru.write.*;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -14,7 +18,7 @@ import java.util.*;
 /**
  * Haru 서버에 저장되고, 로컬에 저장되는 데이터이다.
  */
-public class Entity implements JsonEncodable {
+public class Entity implements JsonEncodable, Parcelable {
 
     final Object lock = new Object();
 
@@ -588,6 +592,7 @@ public class Entity implements JsonEncodable {
 
 
     private static Date parseDate(String text) {
+        if (text == null) return null;
         return new Date(Long.valueOf(text));
     }
 
@@ -675,4 +680,49 @@ public class Entity implements JsonEncodable {
         HashMap<String, Object> entityMap = getAll();
         return new JSONObject(entityMap);
     }
+
+    protected Entity(Parcel in) {
+        changedData = new HashMap();
+        deletedFields = new ArrayList();
+        operationQueue = new LinkedList<Operation>();
+        operationSet = new OperationSet();
+
+        try {
+            entityData = Haru.convertJsonToMap(new JSONObject(in.readString()));
+            className = in.readString();
+            entityId = in.readString();
+            createdAt = new Date(in.readLong());
+            updatedAt = new Date(in.readLong());
+
+        } catch (JSONException e) {
+            throw new RuntimeException("Tried to convert malformed Parcel to entity!");
+        }
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(this.toJson().toString());
+        parcel.writeString(className);
+        parcel.writeString(entityId);
+        parcel.writeLong(createdAt.getTime());
+        parcel.writeLong(updatedAt.getTime());
+    }
+
+    public static final Parcelable.Creator<Entity> CREATOR = new Parcelable.Creator<Entity>() {
+        @Override
+        public Entity createFromParcel(Parcel in) {
+            return new Entity(in);
+        }
+
+        @Override
+        public Entity[] newArray(int size) {
+            return new Entity[size];
+        }
+    };
+
 }

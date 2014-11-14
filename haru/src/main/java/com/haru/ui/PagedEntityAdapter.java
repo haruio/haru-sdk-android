@@ -17,7 +17,7 @@ import java.util.List;
 /**
  *
  */
-public class PageAdapter extends BaseAdapter {
+public class PagedEntityAdapter extends BaseAdapter {
 
     public interface OnViewRenderListener {
         public void onViewRender(int index, Entity entity, View view);
@@ -35,20 +35,20 @@ public class PageAdapter extends BaseAdapter {
 
     private ArrayList<Entity> entities;
 
-    public PageAdapter(Context context, String entityClassName, int layoutResId) {
+    public PagedEntityAdapter(Context context, String entityClassName, int layoutResId) {
         this(context, Entity.where(entityClassName), layoutResId, DEFAULT_ITEMS_PER_PAGE);
     }
 
-    public PageAdapter(Context context, String entityClassName, int layoutResId, int itemsPerPage) {
+    public PagedEntityAdapter(Context context, String entityClassName, int layoutResId, int itemsPerPage) {
         this(context, Entity.where(entityClassName), layoutResId, itemsPerPage);
     }
 
-    public PageAdapter(Context context, Query query, int layoutResId) {
+    public PagedEntityAdapter(Context context, Query query, int layoutResId) {
         this(context, query, layoutResId, DEFAULT_ITEMS_PER_PAGE);
 
     }
 
-    public PageAdapter(Context context, Query query, int layoutResId, int itemsPerPage) {
+    public PagedEntityAdapter(Context context, Query query, int layoutResId, int itemsPerPage) {
         this.context = context;
         this.query = query;
         this.itemsPerPage = itemsPerPage;

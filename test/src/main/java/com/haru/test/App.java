@@ -17,6 +17,7 @@ public class App extends Application {
         super.onCreate();
         Log.e("Haru", "===========================================================================");
         Haru.init(this, APP_KEY, SDK_KEY);
+        Push.subscribe("testChannel");
         Push.init(this);
         Config.loadInBackground();
     }

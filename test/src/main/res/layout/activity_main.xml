@@ -31,8 +31,7 @@
             <Button
                 style="@style/TestMenuButton"
                 android:id="@+id/config_test_btn"
-                android:text="GET ALL CONFIG" />
-
+                android:text="CONFIG TEST" />
 
             <TextView
                 style="@style/TestMenuCategory"
@@ -52,11 +51,6 @@
             <TextView
                 style="@style/TestMenuCategory"
                 android:text="FILE" />
-
-            <Button
-                style="@style/TestMenuButton"
-                android:id="@+id/file_list_btn"
-                android:text="FILE LISTS" />
 
             <Button
                 style="@style/TestMenuButton"
@@ -88,6 +82,7 @@
                 android:id="@+id/helpcenter_notice_btn"
                 android:text="NOTICE LIST" />
 
+            <!--
             <TextView
                 style="@style/TestMenuCategory"
                 android:text="ADVANCED" />
@@ -101,7 +96,7 @@
             <Button
                 style="@style/TestMenuButton"
                 android:id="@+id/reset_btn"
-                android:text="RESET ALL DATA" />
+                android:text="RESET ALL DATA" /> -->
 
         </LinearLayout>
     </ScrollView>

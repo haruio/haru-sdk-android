@@ -8,13 +8,12 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.haru.Config;
-import com.haru.HaruException;
 import com.haru.HaruFile;
 import com.haru.User;
-import com.haru.callback.SaveCallback;
 import com.haru.helpcenter.HelpCenter;
 import com.haru.push.Push;
 import com.haru.ui.helpcenter.HelpCenterActivity;
+import com.haru.ui.helpcenter.SendQuestionDialogBuilder;
 import com.haru.ui.login.LoginActivity;
 
 import java.io.File;
@@ -26,9 +25,6 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // TODO: Test Send Question
-        HelpCenter.sendQuestion("retail3210@gmail.com", "테스트 질문입니다. 이게 가능한가요?");
     }
 
     /**
@@ -57,7 +53,7 @@ public class MainActivity extends Activity {
                 break;
 
             case R.id.config_test_btn:
-                getAllConfig();
+                configTest();
                 break;
 
             case R.id.push_msg_btn:
@@ -77,6 +73,10 @@ public class MainActivity extends Activity {
                 helpCenterFaqList();
                 break;
 
+            case R.id.helpcenter_send_question_btn:
+                helpCenterSendQuestion();
+                break;
+
             case R.id.helpcenter_notice_btn:
                 helpCenterNoticeList();
                 break;
@@ -89,10 +89,9 @@ public class MainActivity extends Activity {
     /**
      * Get Config.
      */
-    void getAllConfig() {
-        Toast.makeText(this,
-                String.valueOf(Config.getDouble("appHello")),
-                Toast.LENGTH_SHORT).show();
+    void configTest() {
+        Double version = Config.getDouble("appHello", -1.0);
+        Toast.makeText(this, String.valueOf(version), Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -161,6 +160,13 @@ public class MainActivity extends Activity {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Launch send question dialog.
+     */
+    void helpCenterSendQuestion() {
+        new SendQuestionDialogBuilder(this).show();
     }
 
     /**

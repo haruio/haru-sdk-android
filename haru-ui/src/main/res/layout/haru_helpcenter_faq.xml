@@ -26,13 +26,13 @@
                 android:paddingTop="18dp">
 
                 <TextView
+                    style="@style/Haru.LightText"
                     android:id="@+id/haru_faq_category_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
-                    android:fontFamily="sans-serif-light"
                     android:text="General"
                     android:textColor="#6e6e6e"
                     android:textSize="22sp" />

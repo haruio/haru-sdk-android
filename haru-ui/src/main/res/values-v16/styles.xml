@@ -9,4 +9,9 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
+    <!-- Light typeface texts. Only works for Android API 16+ devices. -->
+    <style name="Haru.LightText">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
 </resources>

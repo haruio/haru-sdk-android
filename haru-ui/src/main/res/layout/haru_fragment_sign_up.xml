@@ -23,13 +23,13 @@
         android:orientation="vertical">
 
         <TextView
+            style="@style/Haru.LightText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:text="@string/haru_sign_up"
             android:textColor="#FFFFFF"
-            android:fontFamily="sans-serif-light"
-            android:textSize="24dp"/>
+            android:textSize="24sp"/>
 
 
         <LinearLayout
@@ -58,6 +58,7 @@
                 android:hint="@string/haru_field_email"
                 android:maxLines="1"
                 android:singleLine="true"
+                android:inputType="textEmailAddress"
                 android:nextFocusDown="@+id/password" />
 
             <EditText

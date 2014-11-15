@@ -19,12 +19,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.widget.LoginButton;
 import com.haru.Haru;
 import com.haru.HaruException;
 import com.haru.User;
 import com.haru.callback.LoginCallback;
 import com.haru.social.FacebookLoginUtils;
+import com.haru.social.KakaoLoginUtils;
 import com.haru.ui.R;
 
 /**
@@ -55,6 +55,7 @@ public class LoginFragment extends Fragment {
     private View mProgressView;
     private View mLoginFormView;
     private Button facebookLoginButton;
+    private View kakaoLoginButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -91,6 +92,8 @@ public class LoginFragment extends Fragment {
         facebookLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                // Log in using FacebookLoginUtils.
                 FacebookLoginUtils.logIn(getActivity(), new LoginCallback() {
                     @Override
                     public void done(User user, HaruException error) {
@@ -100,6 +103,25 @@ public class LoginFragment extends Fragment {
                         }
 
                         // that's all! done.
+                    }
+                });
+            }
+        });
+
+        // Kakao Login
+        kakaoLoginButton = rootView.findViewById(R.id.haru_social_kakao_login_button);
+        kakaoLoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // Log in using KakaoLoginUtils.
+                KakaoLoginUtils.logIn(getActivity(), new LoginCallback() {
+                    @Override
+                    public void done(User user, HaruException error) {
+                        // call OnLoginFinished callback
+                        if (mLoginFinishedListener != null) {
+                            mLoginFinishedListener.onLoginFinished(Activity.RESULT_OK);
+                        }
                     }
                 });
             }
@@ -155,6 +177,12 @@ public class LoginFragment extends Fragment {
         FacebookLoginUtils.onActivityResult(requestCode, resultCode, data);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        KakaoLoginUtils.onResume(this);
+    }
+
     void attemptLogin() {
 
         // Reset errors.
@@ -207,7 +235,7 @@ public class LoginFragment extends Fragment {
                 // check if there's error
                 if (error != null) {
                     // Username is missing?
-                    if (error.getErrorCode() == HaruException.USERNAME_MISSING) {
+                    if (error.getErrorCode() == HaruException.NO_SUCH_ACCOUNT) {
                         mPasswordView.setError("Username or password is wrong!");
                         mPasswordView.requestFocus();
                     }

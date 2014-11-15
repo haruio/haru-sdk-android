@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="haru_feedback_title">문제가 있으신가요?</string>
+    <string name="haru_feedback_content">앱 사용 중 느꼈던 불편하신 사항들이나\n질문들을 보내실 수 있습니다.</string>
+    <string name="haru_feedback_button">질문 보내기</string>
+    <string name="haru_faq_title">자주 묻는 질문</string>
+    <string name="haru_help_center">Help Center</string>
+
+</resources>

@@ -44,7 +44,7 @@ public class LostPasswordFragment extends Fragment {
         // Set up the login form.
         mEmailView = (EditText) rootView.findViewById(R.id.email);
 
-        Button mSubmitButton = (Button) rootView.findViewById(R.id.email_sign_in_button);
+        Button mSubmitButton = (Button) rootView.findViewById(R.id.submit_button);
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

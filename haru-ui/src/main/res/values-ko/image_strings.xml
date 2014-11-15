@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Image chooser -->
+    <string name="haru_chooser_title">사진 불러오기</string>
+    <string name="haru_chooser_gallery">갤러리에서 선택</string>
+    <string name="haru_chooser_take_picture">사진 촬영</string>
+    <string name="haru_chooser_take_video">동영상 촬영</string>
+
+    <string name="haru_crop_saving">사진을 저장 중입니다…</string>
+    <string name="haru_crop_wait">잠시만 기다려 주세요…</string>
+    <string name="haru_crop_pick_error">No image sources available</string>
+
+</resources>

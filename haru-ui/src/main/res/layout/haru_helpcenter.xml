@@ -28,12 +28,12 @@
                 android:paddingTop="18dp">
 
                 <TextView
+                    style="@style/Haru.LightText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="16dp"
-                    android:text="Any problem?"
+                    android:text="@string/haru_feedback_title"
                     android:textColor="#6e6e6e"
-                    android:fontFamily="sans-serif-light"
                     android:textSize="26sp" />
 
                 <TextView
@@ -42,7 +42,7 @@
                     android:layout_marginLeft="16dp"
                     android:textColor="#8b8b8b"
                     android:layout_marginTop="4dp"
-                    android:text="Send us a feedback to solve the problem." />
+                    android:text="@string/haru_feedback_content" />
 
                 <View
                     android:layout_width="match_parent"
@@ -69,7 +69,7 @@
                         android:layout_height="wrap_content"
                         android:textSize="16sp"
                         android:textColor="#4183f0"
-                        android:text="Send a question"/>
+                        android:text="@string/haru_feedback_button"/>
 
                 </LinearLayout>
 
@@ -87,14 +87,14 @@
                 android:paddingTop="18dp">
 
                 <TextView
+                    style="@style/Haru.LightText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
                     android:layout_marginBottom="18dp"
-                    android:text="Frequently Asked Questions"
+                    android:text="@string/haru_faq_title"
                     android:textColor="#6e6e6e"
-                    android:fontFamily="sans-serif-light"
                     android:textSize="26sp" />
 
                 <LinearLayout

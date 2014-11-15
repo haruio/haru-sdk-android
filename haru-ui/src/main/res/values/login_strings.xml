@@ -10,6 +10,7 @@
     <!-- Log In -->
     <string name="haru_log_in">Log In</string>
     <string name="haru_log_in_cap">LOG IN</string>
+    <string name="haru_log_in_facebook">Log in with Facebook</string>
 
     <!-- Sign up -->
     <string name="haru_sign_up">Sign Up</string>

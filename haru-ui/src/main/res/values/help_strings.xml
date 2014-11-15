@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="haru_feedback_title">Any problem?</string>
+    <string name="haru_feedback_content">Send us a feedback to solve the problem.</string>
+    <string name="haru_feedback_button">Send a question</string>
+    <string name="haru_faq_title">Frequently Asked Questions</string>
     <string name="haru_help_center">Help Center</string>
 
 </resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Login Fields -->
+    <string name="haru_log_in_facebook">Facebook 계정으로 로그인</string>
+</resources>

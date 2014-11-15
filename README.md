@@ -1,4 +1,4 @@
-haru-sdk-android
+Haru SDK for Android
 ================
 
-Haru SDK for Android
+Haru is mobile Backend-as-a-Service (http://haru.io/)

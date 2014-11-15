@@ -83,10 +83,6 @@ public class PushReceiver extends BroadcastReceiver {
      * @return Android 알림 센터에 올려질 {@link android.app.Notification} 객체.
      */
     public Notification onNotification(Context context, Push push) {
-        Notification noti =
-                new Notification(context.getApplicationInfo().icon,
-                        push.getTitle(), System.currentTimeMillis());
-
         Notification notification = new Notification(context.getApplicationInfo().icon,
                 push.getTitle(),
                 System.currentTimeMillis());
@@ -104,6 +100,6 @@ public class PushReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         notification.setLatestEventInfo(context, push.getTitle(), push.getMessage(), contentIntent);
 
-        return noti;
+        return notification;
     }
 }

@@ -118,7 +118,7 @@ public class Haru {
             // to convert JSON values to actual types.
             // Try to parse name
             try {
-                value = json.getDouble(key);
+                value = json.getInt(key);
 
             } catch (Exception e) {
                 try {
@@ -126,7 +126,7 @@ public class Haru {
 
                 } catch (JSONException le) {
                     try {
-                        value = json.getInt(key);
+                        value = json.getDouble(key);
 
                     } catch (JSONException ie) {
                         try {

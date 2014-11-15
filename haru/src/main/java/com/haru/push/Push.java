@@ -223,7 +223,8 @@ public class Push implements Parcelable {
      * @return Push Type (Push.TYPE_MESSAGE | Push.TYPE_NOTIFICATION)
      */
     public int getType() {
-        return (Integer) data.get("type");
+        Object value = data.get("type");
+        return (value == null ? 0 : (Integer) value);
     }
 
     public String getTitle() {

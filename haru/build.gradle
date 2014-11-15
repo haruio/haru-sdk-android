@@ -1,4 +1,15 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+group = 'io.haru'
+version = '0.1.0'
+
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 android {
     compileSdkVersion 18
@@ -33,7 +44,67 @@ dependencies {
     compile project(':kakao')
 }
 
+android.libraryVariants.all { variant ->
+    task("generate${variant.name}Javadoc", type: Javadoc) {
+        source = variant.javaCompile.source
+        def androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
 
-task jar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
+        classpath = files(variant.javaCompile.classpath.files, androidJar)
+        options {
+            encoding "UTF-8"
+            links "http://docs.oracle.com/javase/7/docs/api/"
+            linksOffline "http://d.android.com/reference","${android.sdkDirectory}/docs/reference"
+        }
+        exclude '**/BuildConfig.java'
+        title 'Haru Android SDK'
+    }
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            configuration = configurations.archives
+
+            repository(url: uri('../repo'))
+            pom.project {
+                name 'Haru SDK for Android'
+                description "Haru is mobile Backend-as-a-Service and this is SDK of Haru."
+                url 'https://github.com/soma5mbaas/haru-sdk-android.git'
+                inceptionYear '2014'
+
+                scm {
+                    url 'https://github.com/soma5mbaas/haru-sdk-android.git'
+                    connection 'scm:git:git://github.com/soma5mbaas/haru-sdk-android.git'
+                    developerConnection 'scm:git:ssh://git@github.com/soma5mbaas/haru-sdk-android.git'
+                    tag 'HEAD'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+                organization {
+                    name 'Haru'
+                    url 'http://haru.io'
+                }
+                developers {
+                    developer {
+                        id 'retail3210'
+                        name 'Hyojun Kim'
+                        email 'retail3210@gmail.com'
+                    }
+                }
+            }
+        }
+    }
 }

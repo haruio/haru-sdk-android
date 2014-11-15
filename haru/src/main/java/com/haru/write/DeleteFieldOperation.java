@@ -14,7 +14,7 @@ public class DeleteFieldOperation extends Operation<String> {
 
     @Override
     public String getMethod() {
-        return "delete";
+        return "deleteFields";
     }
 
     @Override

@@ -9,11 +9,19 @@ import android.util.Log;
 
 import com.haru.callback.SaveCallback;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 
+/**
+ * 앱 설치 정보이다. 앱이 설치된 이후, 처음 실행시 생성되어 서버에 저장된다.
+ * <br/> 통계 및 푸시에 사용된다.
+ */
 @ClassNameOfEntity(Installation.CLASS_NAME)
 public final class Installation extends Entity {
 
@@ -119,8 +127,7 @@ public final class Installation extends Entity {
             super.put("haruVersion", Haru.getSdkVersion());
     }
 
-
-    public void updateUuid() {
+    private void updateUuid() {
         if (mUUID == null) {
             TelephonyManager tm =
                     (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
@@ -140,27 +147,48 @@ public final class Installation extends Entity {
         Haru.logI("deviceToken : %s", mUUID);
     }
 
+    /**
+     * 현재 이 앱의 설치 정보를 반환한다.
+     * @return {@link com.haru.Installation}
+     */
     public static Installation getCurrentInstallation() {
         return currentInstallation;
     }
 
-    public void addChannel(String channel) {
-        ArrayList<String> channels = getChannels();
+    public void addPushChannel(String channel) {
+        ArrayList<String> channels = getPushChannels();
         channels.add(channel);
         put("channels", channels);
     }
 
-    public void addChannels(List<String> channels) {
-        ArrayList<String> currentChannels = getChannels();
+    public void addPushChannels(List<String> channels) {
+        ArrayList<String> currentChannels = getPushChannels();
         currentChannels.addAll(channels);
         put("channels", currentChannels);
     }
 
-    public void clearChannels() {
+    public void clearPushChannels() {
         put("channels", new ArrayList<String>());
     }
 
-    public ArrayList<String> getChannels() {
-        return (ArrayList<String>) super.get("channels");
+    public ArrayList<String> getPushChannels() {
+        // TODO: Need to refactor
+        try {
+            ArrayList<String> channels;
+            Object list = super.get("channels");
+            if (list instanceof JSONArray) {
+                channels = new ArrayList<String>();
+                JSONArray listJson = (JSONArray) list;
+                for (int i=0;i<listJson.length();i++) {
+                    channels.add(listJson.getString(i));
+                }
+            }
+            else channels = (ArrayList<String>) list;
+            if (channels == null) channels = new ArrayList<String>();
+            return channels;
+        } catch (JSONException e) {
+            Haru.stackTrace(e);
+            return new ArrayList<String>();
+        }
     }
 }

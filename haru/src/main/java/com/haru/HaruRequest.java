@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
-import com.haru.callback.ResponseCallback;
 import com.haru.mime.HttpMultipartMode;
 import com.haru.mime.MultipartEntity;
 import com.haru.mime.ProgressOutputStream;
@@ -37,6 +36,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+/**
+ * Haru API 서버에 수동으로 비동기적 API 호출을 하기 위해서 사용된다.
+ */
 public class HaruRequest {
 
     private static final String HARU_ENDPOINT = "http://api.haru.io/1";
@@ -194,6 +196,10 @@ public class HaruRequest {
                 String body = EntityUtils.toString(response.getEntity(), "utf-8");
                 Haru.logD("%s : Response => %s", endpoint, body);
 
+                if (response.getStatusLine().getStatusCode() != 200) {
+                    throw new RuntimeException(response.getStatusLine().toString());
+                }
+
                 return new HaruResponse(response, new JSONObject(body));
 
             }
@@ -204,18 +210,6 @@ public class HaruRequest {
                 return task.getResult();
             }
         }, Task.UI_THREAD_EXECUTOR);
-    }
-
-    public void executeAsync(final ResponseCallback callback) {
-        executeAsync().continueWith(new Continuation<HaruResponse, Object>() {
-            @Override
-            public Object then(Task<HaruResponse> task) throws Exception {
-                callback.done(task.getResult());
-
-                // continuation ends
-                return null;
-            }
-        });
     }
 
     public HaruRequest get() {

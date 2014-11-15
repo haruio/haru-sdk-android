@@ -1,4 +1,4 @@
-package com.haru;
+package com.haru.push;
 
 import android.app.ActivityManager;
 import android.app.Service;
@@ -6,8 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.haru.push.MqttPushRoute;
+import com.haru.Haru;
 
+/**
+ * 백그라운드에서 실행되면서 Push를 수신해서 AndroidManifest.xml에 지정된 PushReceiver를 호출한다. <br/>
+ * <b>Push를 사용하기 위해서 반드시 이 서비스는 AndroidManifest.xml에 정의되어야만 한다!</b>
+ */
 public class PushService extends Service {
     // constants used to notify the Activity UI of received messages
     public static final String ACTION_PUSH_RECEIVED = "com.haru.push.RECEIVED";
@@ -72,7 +76,7 @@ public class PushService extends Service {
     /**
      * Called when the PushService is started.
      */
-    public void start(final Intent intent, final int startId) {
+    private void start(final Intent intent, final int startId) {
         new Thread(new Runnable() {
             @Override
             public void run() {

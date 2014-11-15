@@ -1,7 +1,5 @@
 package com.haru.write;
 
-import com.haru.KeyValuePair;
-
 import java.util.Iterator;
 
 public class UpdateOperation extends Operation<KeyValuePair> {

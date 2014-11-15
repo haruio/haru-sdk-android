@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * POST, PUT, DELETE 메서드의 파라미터를 작성할 때 사용된다.
+ * Haru 서버 API를 호출 시 보낼 파라미터를 작성할 때 사용된다.
  */
 public class Param implements JsonEncodable {
     private HashMap<String, Object> paramMap;
@@ -30,6 +30,10 @@ public class Param implements JsonEncodable {
 
     public void put(String key, List value) {
         put(key, new JSONArray(value));
+    }
+
+    public Object get(String key) {
+        return paramMap.get(key);
     }
 
     /**

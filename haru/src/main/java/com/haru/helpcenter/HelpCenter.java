@@ -5,6 +5,7 @@ import com.haru.HaruException;
 import com.haru.HaruRequest;
 import com.haru.HaruResponse;
 import com.haru.Param;
+import com.haru.User;
 import com.haru.callback.SaveCallback;
 import com.haru.helpcenter.callback.GetCategoryCallback;
 import com.haru.helpcenter.callback.GetFAQCallback;
@@ -19,19 +20,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * HelpCenter 기능들을 사용할 수 있게 해주는 API이다.
+ * 고객 관리 및 고객과의 소통을 위한 고객센터 기능을 제공한다.
+ * @author VISTA
  */
 public class HelpCenter {
 
     /**
      * 공지사항들을 가져온다.
+     * haru.io 관리자 페이지의 고객 관리 > 공지사항 메뉴에서 확인할 수 있다.
+     *
      * @param callback GetNoticeCallback
      * @return Task
      */
     public static Task getNoticeList(final GetNoticeCallback callback) {
 
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/notice/list")
+        Task<HaruResponse> getTask = new HaruRequest("/notice/list")
                 .get()
                 .executeAsync();
 
@@ -74,16 +78,27 @@ public class HelpCenter {
         return sendQuestion(email, question, null);
     }
 
+    /**
+     * 질문을 보낸다.
+     * haru.io 관리자 페이지의 고객 관리 > 질문사항 메뉴에서 확인할 수 있다.
+     *
+     * @param email 이메일 (null일 시 현재 유저의 이메일 사용)
+     * @param question 질문 내용
+     * @param callback 콜백
+     * @return Task
+     */
     public static Task sendQuestion(String email,
                                     String question,
                                     final SaveCallback callback) {
+
+        if (email == null && User.isLogined()) email = User.getCurrentUser().getEmail();
 
         Param param = new Param();
         param.put("emailaddress", email);
         param.put("body", question);
 
         // request to help center server
-        Task<HaruResponse> addQnaTask = new HaruRequest("http://stage.haru.io:3000" + "/qna/add")
+        Task<HaruResponse> addQnaTask = new HaruRequest("/qna/add")
                 .post(param)
                 .executeAsync();
 
@@ -112,11 +127,17 @@ public class HelpCenter {
         });
     }
 
+    /**
+     * 특정 카테고리 안의 FAQ를 가져온다.
+     * @param categoryName 카테고리 이름
+     * @param callback 콜백
+     * @return Task
+     */
     public static Task getFrequentlyAskedQuestions(String categoryName,
                                                    final GetFAQCallback callback) {
 
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/faq/list/" + categoryName)
+        Task<HaruResponse> getTask = new HaruRequest("/faq/list/" + categoryName)
                 .get()
                 .executeAsync();
 
@@ -155,9 +176,14 @@ public class HelpCenter {
         });
     }
 
+    /**
+     * FAQ의 카테고리 목록을 가져온다.
+     * @param callback 콜백
+     * @return Task
+     */
     public static Task getFaqCategories(final GetCategoryCallback callback) {
         // request to help center server
-        Task<HaruResponse> getTask = new HaruRequest("http://stage.haru.io:3000" + "/faq/category/list")
+        Task<HaruResponse> getTask = new HaruRequest("/faq/category/list")
                 .get()
                 .executeAsync();
 

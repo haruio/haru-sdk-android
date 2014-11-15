@@ -12,11 +12,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 데이터를 검색하기 위한 쿼리 클래스이다.
+ * {@link com.haru.Entity#where(String)}을 통해 Chaining 형식으로 생성할 수 있다.
+ */
 public class Query {
-
-    /**
-     * Entity.where("User").group().greaterThan("10").or().ungroup());
-     */
 
     private Class<? extends Entity> classObject;
     private String className;
@@ -219,7 +219,7 @@ public class Query {
     public Query containedIn(String field, List<?> value) {
         try {
             JSONObject inClause = new JSONObject();
-            inClause.put("$in", value);
+            inClause.put("$in", new JSONArray(value));
             currentScope.put(field, inClause);
 
         } catch (JSONException e) {
@@ -231,7 +231,7 @@ public class Query {
     public Query notContainedIn(String field, List<?> value) {
         try {
             JSONObject ninClause = new JSONObject();
-            ninClause.put("$nin", value);
+            ninClause.put("$nin", new JSONArray(value));
             currentScope.put(field, ninClause);
 
         } catch (JSONException e) {
@@ -254,6 +254,10 @@ public class Query {
         return this;
     }
 
+    /**
+     * 쿼리를 수행한 결과(Entity)의 목록을 받는다.
+     * @param callback {@link com.haru.callback.FindCallback}
+     */
     public void findAll(final FindCallback callback) {
         Param param = new Param();
         param.put("where", mainQueryObject.toString());
@@ -293,6 +297,10 @@ public class Query {
         });
     }
 
+    /**
+     * 쿼리를 수행하고 1개의 결과만을 받는다.
+     * @param callback {@link com.haru.callback.GetCallback}
+     */
     public void findOne(final GetCallback callback) {
         Param param = new Param();
         param.put("where", mainQueryObject.toString());
@@ -329,6 +337,10 @@ public class Query {
     @Override
     public String toString() {
         return mainQueryObject.toString();
+    }
+
+    public JSONObject getJson() {
+        return mainQueryObject;
     }
 
 }

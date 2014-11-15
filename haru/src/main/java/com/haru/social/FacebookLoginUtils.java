@@ -3,6 +3,7 @@ package com.haru.social;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.util.Log;
@@ -13,6 +14,8 @@ import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
+import com.facebook.android.Util;
+import com.facebook.internal.Utility;
 import com.facebook.model.GraphUser;
 import com.haru.Haru;
 import com.haru.HaruException;
@@ -122,6 +125,22 @@ public class FacebookLoginUtils {
         if (activity != null) {
             Session.getActiveSession().onActivityResult(activity, requestCode, resultCode, data);
         }
+    }
+
+    public static void logout() {
+        Context context = Haru.getAppContext();
+
+        // clear caches
+        Utility.clearCaches(context);
+        Utility.clearFacebookCookies(context);
+
+        // clear Facebook token store
+        SharedPreferences.Editor tokenStrategy = context.getSharedPreferences(
+                "com.facebook.SharedPreferencesTokenCachingStrategy.DEFAULT_KEY",
+                Context.MODE_PRIVATE).edit();
+
+        tokenStrategy.clear();
+        tokenStrategy.apply();
     }
 }
 

@@ -1,9 +1,12 @@
-package com.haru;
+package com.haru.write;
+
+import com.haru.Haru;
+import com.haru.JsonEncodable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class KeyValuePair implements JsonEncodable {
+class KeyValuePair implements JsonEncodable {
     private String key;
     private Object value;
 
@@ -23,7 +26,7 @@ public class KeyValuePair implements JsonEncodable {
     @Override
     public Object toJson() throws JSONException {
         JSONObject object = new JSONObject();
-        object.put(key, value);
+        object.put(key, Haru.encode(value));
         return object;
     }
 }

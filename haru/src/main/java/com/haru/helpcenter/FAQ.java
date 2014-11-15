@@ -11,28 +11,51 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
+/**
+ * Frequently Asked Questions(자주 묻는 질문)
+ */
 public class FAQ implements Parcelable {
 
     private String faqId;
     private String title, body, category;
     private Date createdAt;
 
+    /**
+     * FAQ 글의 고유 ID를 반환한다.
+     * @return Id
+     */
     public String getId() {
         return faqId;
     }
 
+    /**
+     * FAQ 글 제목을 반환한다.
+     * @return 제목 (String)
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * FAQ 글 내용을 반환한다.
+     * @return 내용 (String)
+     */
     public String getBody() {
         return body;
     }
 
+    /**
+     * FAQ 글의 카테고리를 반환한다.
+     * @return 카테고리 이름 (String)
+     */
     public String getCategory() {
         return category;
     }
 
+    /**
+     * FAQ 글을 등록한 날짜를 반환한다.
+     * @return 날짜 (Date)
+     */
     public Date getCreatedAt() {
         return createdAt;
     }

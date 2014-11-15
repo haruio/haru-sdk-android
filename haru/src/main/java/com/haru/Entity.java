@@ -16,7 +16,8 @@ import org.json.JSONObject;
 import java.util.*;
 
 /**
- * Haru 서버에 저장되고, 로컬에 저장되는 데이터이다.
+ * 서버에 저장되거나, 로컬에 저장되는 데이터이다.
+ * The data that stored into the Haru server or local datastore.
  */
 public class Entity implements JsonEncodable, Parcelable {
 
@@ -36,7 +37,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     // 서버로 보내질 Operation들이다.
     private LinkedList<Operation> operationQueue;
-    private OperationSet operationSet;
+    protected OperationSet operationSet;
 
     protected String className;
     protected String entityId;
@@ -127,10 +128,10 @@ public class Entity implements JsonEncodable, Parcelable {
         this.changedData = new HashMap();
         this.deletedFields = new ArrayList();
         this.operationQueue = new LinkedList<Operation>();
-        this.operationSet = new OperationSet();
+        this.operationSet = new OperationSet(className, entityId);
 
         this.className = className;
-        addOperationToQueue(new CreateEntityOperation(this));
+//      addOperationToQueue(new CreateEntityOperation(this));
     }
 
     /**
@@ -244,6 +245,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     protected void setEntityId(String entityId) {
         this.entityId = entityId;
+        this.operationSet = new OperationSet(className, entityId);
     }
 
 
@@ -272,6 +274,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * 새로운 엔티티인지 체크한다.
+     * Returns true if it's newly created entity.
      */
     public boolean isNewEntity() {
         return entityId == null;
@@ -306,6 +309,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * 해당 필드의 데이터를 가져온다.
+     * Returns value of the field.
      * @param key 필드 이름
      * @return 해당하는 값, 없을 시 null
      */
@@ -320,7 +324,8 @@ public class Entity implements JsonEncodable, Parcelable {
     }
 
     /**
-     * 해당 필드를 삭제한다.
+     * 해당 필드의 값을 삭제한다.
+     * Remove a value.
      * @param key 삭제할 필드
      */
     public void remove(String key) {
@@ -341,6 +346,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * Entity의 고유 ID를 반환한다.
+     * Returns unique id of the Entity.
      * @return Entity Id
      */
     public String getId() {
@@ -349,6 +355,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * 이 Entity가 생성된 시간을 반환한다.
+     * Returns creation date of the Entity.
      * @return Date
      */
     public Date getCreatedAt() {
@@ -357,6 +364,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * 이 Entity가 마지막으로 수정된 시간을 반환한다.
+     * Returns last updated date of the Entity.
      * @return Date
      */
     public Date getUpdatedAt() {
@@ -364,7 +372,8 @@ public class Entity implements JsonEncodable, Parcelable {
     }
 
     /**
-     * 이 Entity의 클래스의 이름을 반환한다.
+     * 이 Entity의 클래스 이름을 반환한다.
+     * Returns class name of the Entity.
      * @return Class Name (Collection)
      */
     public String getClassName() {
@@ -384,7 +393,8 @@ public class Entity implements JsonEncodable, Parcelable {
     }
 
     /**
-     * 로컬 데이터스토어에 저장한다.
+     * Entity를 로컬 데이터 스토어에 저장한다.
+     * Saves entity into the local datastore.
      */
     public void saveToLocal() {
         LocalEntityStore.saveEntity(this, null);
@@ -453,6 +463,8 @@ public class Entity implements JsonEncodable, Parcelable {
                 entityData.put("createdAt", createdAt.getTime());
                 entityData.put("updatedAt", updatedAt.getTime());
 
+                operationSet = new OperationSet(className, entityId);
+
                 callback.done(null);
 
                 return Entity.this;
@@ -510,6 +522,7 @@ public class Entity implements JsonEncodable, Parcelable {
     }
 
     /**
+     * Entity의 데이터들을 반환한다.
      * Returns all data of the Entity.
      * @return Data Map (String, Object pair)
      */
@@ -519,6 +532,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * Entity를 삭제한다.
+     * Deletes a entity.
      * @return 삭제 태스크
      */
     public Task deleteInBackground() {
@@ -527,6 +541,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
     /**
      * Entity를 삭제한다.
+     * Deletes a entity.
      * @param callback 삭제 완료후 호출할 DeleteCallback
      * @return 삭제 태스크
      */
@@ -555,8 +570,8 @@ public class Entity implements JsonEncodable, Parcelable {
     }
 
     /**
-     * 서버로부터 정보를 백그라운드에서 업데이트해온다.
-     * 모든 변경사항은 소실된다.
+     * 서버로부터 Entity 정보를 업데이트한다.
+     * 주의: 모든 변경사항은 소실된다.
      */
     public Task<Entity> fetchInBackground() {
         if (isNewEntity()) {
@@ -662,10 +677,15 @@ public class Entity implements JsonEncodable, Parcelable {
      * @param entityId 해당 엔티티의 ID
      * @return 변환된 Entity
      */
-    static <T extends Entity> T fromJsonToSubclass(Class<T> classObject, String entityId, JSONObject json) throws Exception {
+    static <T extends Entity> T fromJsonToSubclass(Class<T> classObject,
+                                                   String className,
+                                                   String entityId,
+                                                   JSONObject json) throws Exception {
         T entity = classObject.newInstance();
         entity.entityData = Haru.convertJsonToMap(json);
+        entity.className = className;
         entity.entityId = entityId;
+        entity.operationSet = new OperationSet(className, entityId);
         entity.createdAt = parseDate(json.getString("createdAt"));
         entity.updatedAt = parseDate(json.getString("updatedAt"));
         return entity;
@@ -685,7 +705,6 @@ public class Entity implements JsonEncodable, Parcelable {
         changedData = new HashMap();
         deletedFields = new ArrayList();
         operationQueue = new LinkedList<Operation>();
-        operationSet = new OperationSet();
 
         try {
             entityData = Haru.convertJsonToMap(new JSONObject(in.readString()));
@@ -693,6 +712,8 @@ public class Entity implements JsonEncodable, Parcelable {
             entityId = in.readString();
             createdAt = new Date(in.readLong());
             updatedAt = new Date(in.readLong());
+
+            operationSet = new OperationSet(className, entityId);
 
         } catch (JSONException e) {
             throw new RuntimeException("Tried to convert malformed Parcel to entity!");
@@ -704,6 +725,11 @@ public class Entity implements JsonEncodable, Parcelable {
         return 0;
     }
 
+    /**
+     * Entity를 Parcel 형태로 직렬화한다. 직렬화 시에만 호출된다.
+     * @param parcel Parcel
+     * @param i
+     */
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(this.toJson().toString());
@@ -713,6 +739,9 @@ public class Entity implements JsonEncodable, Parcelable {
         parcel.writeLong(updatedAt.getTime());
     }
 
+    /**
+     * Entity를 Parcel 형태로 직렬화한다. 직렬화 시에 사용된다.
+     */
     public static final Parcelable.Creator<Entity> CREATOR = new Parcelable.Creator<Entity>() {
         @Override
         public Entity createFromParcel(Parcel in) {

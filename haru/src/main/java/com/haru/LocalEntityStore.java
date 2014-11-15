@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 /**
- *  Entity를 로컬에 저장한다.
+ * Entity를 로컬에 저장하기 위한 로컬 데이터 스토어이다.
  */
 class LocalEntityStore {
 
@@ -111,6 +111,7 @@ class LocalEntityStore {
             ArrayList<T> entities = new ArrayList<T>();
             while (cursor.moveToNext()) {
                 entities.add((T) Entity.fromJsonToSubclass(Entity.findClassByName(className),
+                        className,
                         cursor.getString(cursor.getColumnIndex("entityId")),
                         new JSONObject(cursor.getString(cursor.getColumnIndex("data")))));
             }

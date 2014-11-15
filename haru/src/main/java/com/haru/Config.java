@@ -160,10 +160,11 @@ public class Config {
      * @param key Configuration field name
      * @return value (Integer)
      */
-    public static int getInt(String key) {
+    public static int getInt(String key, int defaultValue) {
         if (!isLoaded)
             throw new IllegalStateException("The Config should be loaded once before getting value!");
-        return (Integer) configMap.get(key);
+        Integer value = (Integer) configMap.get(key);
+        return (value != null ? value : defaultValue);
     }
 
     /**
@@ -173,10 +174,11 @@ public class Config {
      * @param key Configuration field name
      * @return value (Double)
      */
-    public static Double getDouble(String key) {
+    public static Double getDouble(String key, Double defaultValue) {
         if (!isLoaded)
             throw new IllegalStateException("The Config should be loaded once before getting value!");
-        return (Double) configMap.get(key);
+        Double value = (Double) configMap.get(key);
+        return (value != null ? value : defaultValue);
     }
 
     /**
@@ -186,10 +188,11 @@ public class Config {
      * @param key Configuration field name
      * @return value (Long)
      */
-    public static Long getLong(String key) {
+    public static Long getLong(String key, Long defaultValue) {
         if (!isLoaded)
             throw new IllegalStateException("The Config should be loaded once before getting value!");
-        return (Long) configMap.get(key);
+        Long value = (Long) configMap.get(key);
+        return (value != null ? value : defaultValue);
     }
 
     /**
@@ -199,10 +202,11 @@ public class Config {
      * @param key Configuration field name
      * @return value (Integer)
      */
-    public static String getString(String key) {
+    public static String getString(String key, String defaultValue) {
         if (!isLoaded)
             throw new IllegalStateException("The Config should be loaded once before getting value!");
-        return (String) configMap.get(key);
+        String value = (String) configMap.get(key);
+        return (value != null ? value : defaultValue);
     }
 
     /**

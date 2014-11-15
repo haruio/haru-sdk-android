@@ -3,6 +3,8 @@ package com.haru;
 import android.util.Log;
 
 import com.haru.callback.LoginCallback;
+import com.haru.social.FacebookLoginUtils;
+import com.haru.social.KakaoLoginUtils;
 import com.haru.task.Continuation;
 import com.haru.task.Task;
 
@@ -10,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * A entity that contains user information.
@@ -332,6 +335,18 @@ public class User extends Entity {
      * @return 로그아웃 태스크 (서버로의)
      */
     public static Task logOutInBackground() {
+
+        User user = getCurrentUser();
+        if (user == null) {
+            throw new IllegalStateException("You must be logined before logout!");
+        }
+
+        // If social-logined, we need to call social log out method
+        HashMap socialAuthData = (HashMap) user.get("authData");
+        if (socialAuthData != null) {
+            if (socialAuthData.containsKey("facebook") ) FacebookLoginUtils.logout();
+            else if (socialAuthData.containsKey("kakao")) KakaoLoginUtils.logout();
+        }
 
         // Logout request to user server.
         Task<HaruResponse> logoutTask = new HaruRequest("/logout/me").executeAsync();

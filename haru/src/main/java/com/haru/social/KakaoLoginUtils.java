@@ -2,7 +2,9 @@ package com.haru.social;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -11,6 +13,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
+import com.haru.Haru;
+import com.haru.HaruException;
 import com.haru.R;
 import com.haru.User;
 import com.kakao.APIErrorResult;
@@ -19,8 +23,10 @@ import com.kakao.MeResponseCallback;
 import com.kakao.Session;
 
 import com.haru.callback.LoginCallback;
+import com.kakao.SessionCallback;
 import com.kakao.UserManagement;
 import com.kakao.UserProfile;
+import com.kakao.exception.KakaoException;
 import com.kakao.helper.StoryProtocol;
 import com.kakao.helper.TalkProtocol;
 
@@ -44,7 +50,7 @@ public class KakaoLoginUtils {
      *
      *  @param callback Login Callback
      */
-    public static void logInAfterKakaoLogined(final LoginCallback callback) {
+    public static void logInAfterKakaoLogined(LoginCallback callback) {
         final Session currentSession = Session.getCurrentSession();
         if (currentSession == null) {
             throw new IllegalAccessError("Kakao SDK를 통한 로그인 (Session.initializeSession) 이후 호출하세요.");
@@ -54,6 +60,10 @@ public class KakaoLoginUtils {
                     + "Kakao SDK를 통한 로그인 (Session.initializeSession) 이후 호출하세요.");
         }
 
+        internalLogin(callback);
+    }
+
+    private static void internalLogin(final LoginCallback callback) {
         // Get current user
         UserManagement.requestMe(new MeResponseCallback() {
             @Override
@@ -61,7 +71,7 @@ public class KakaoLoginUtils {
                 // Log in into haru server
                 User.socialLogin("kakao",
                         String.valueOf(userProfile.getId()),
-                        currentSession.getAccessToken(),
+                        Session.getCurrentSession().getAccessToken(),
                         callback);
             }
 
@@ -213,18 +223,57 @@ public class KakaoLoginUtils {
         }
     }
 
+    public static void logout() {
+        Session.getCurrentSession().close(sessionCallback);
+    }
+
     /**
-     * {@link com.haru.social.KakaoLoginUtils#logIn(android.app.Activity, com.haru.callback.LoginCallback)}
-     * Activity를 통해 로그인했을 경우에 해당 액티비티의 onResume에서 호출해야 하는 함수이다.
+     * {@link #logIn(android.app.Activity, com.haru.callback.LoginCallback)}을 통해
+     * 로그인했을 경우에 해당 액티비티의 onResume에서 호출해야 하는 함수이다.
+     *
+     * @param activity 호출한 액티비티
      */
-    public static void onResume() {
-        if (isLogining && Session.getCurrentSession().isOpened()){
+    public static void onResume(Activity activity) {
+        Session.initializeSession(activity, sessionCallback);
+        if (isLogining && Session.getCurrentSession().isOpened()) {
+            sessionCallback.onSessionOpened();
+        }
+    }
+
+    /**
+     * {@link #logIn(android.app.Activity, com.haru.callback.LoginCallback)}을 통해
+     * 로그인했을 경우에 해당 액티비티의 onResume에서 호출해야 하는 함수이다.
+     *
+     * @param fragment 호출한 프래그먼트
+     */
+    public static void onResume(Fragment fragment) {
+        onResume(fragment.getActivity());
+    }
+
+    /**
+     * 카카오 로그인중 세션 상태가 바뀌었을 때 호출된다.
+     */
+    private static SessionCallback sessionCallback = new SessionCallback() {
+        @Override
+        public void onSessionOpened() {
             isLogining = false;
 
             // now we need to retrieve user informations
             // and then.. log in into haru server!
-            logInAfterKakaoLogined(currentCallback);
+            if (currentCallback == null) return;
+            internalLogin(currentCallback);
         }
-    }
+
+        @Override
+        public void onSessionClosed(KakaoException exception) {
+            if (exception != null) {
+                isLogining = false;
+                Haru.stackTrace(exception);
+
+                if (currentCallback == null) return;
+                currentCallback.done(null, new HaruException(exception));
+            }
+        }
+    };
 }
 

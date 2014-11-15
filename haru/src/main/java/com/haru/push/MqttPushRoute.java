@@ -16,7 +16,6 @@ import android.util.Log;
 
 import com.haru.Haru;
 import com.haru.Installation;
-import com.haru.PushService;
 import com.ibm.mqtt.IMqttClient;
 import com.ibm.mqtt.MqttClient;
 import com.ibm.mqtt.MqttException;
@@ -31,7 +30,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-public class MqttPushRoute implements MqttSimpleCallback {
+class MqttPushRoute implements MqttSimpleCallback {
 
     private Service service;
 
@@ -129,7 +128,8 @@ public class MqttPushRoute implements MqttSimpleCallback {
 
     public MqttPushRoute(Service service) {
         this.service = service;
-        this.topicName = Installation.getCurrentInstallation().getString("deviceToken");
+        this.topicName = Haru.getAppKey() + ":"
+                + Installation.getCurrentInstallation().getString("deviceToken");
 
         // reset status variable to initial state
         connectionStatus = MQTTConnectionStatus.INITIAL;
@@ -362,8 +362,6 @@ public class MqttPushRoute implements MqttSimpleCallback {
     @Override
     public void publishArrived(String topic, byte[] payloadbytes, int qos, boolean retained) {
 
-        Log.i("Haru", "Push ==> arrived something! " + topic);
-
         // we protect against the phone switching off while we're doing this
         //  by requesting a wake lock - we request the minimum possible wake
         //  lock - just enough to keep the CPU running until we've finished
@@ -377,6 +375,8 @@ public class MqttPushRoute implements MqttSimpleCallback {
         //   data I will be receiving - your app doesn't have to send/receive
         //   strings - anything that can be sent as bytes is valid
         String messageBody = new String(payloadbytes);
+        Log.i("Haru", "Push ==> arrived something! " + messageBody);
+
 
         //
         //  for times when the app's Activity UI is not running, the Service
@@ -790,7 +790,7 @@ public class MqttPushRoute implements MqttSimpleCallback {
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(PushService.ACTION_PUSH_RECEIVED);
         broadcastIntent.putExtra(PushService.TOPIC_INTENT_EXTRA, topic);
-        broadcastIntent.putExtra(Push.INTENT_EXTRA, new Push(message));
+        broadcastIntent.putExtra(Push.INTENT_EXTRA, Push.fromPacket(message));
         service.sendBroadcast(broadcastIntent);
     }
 }

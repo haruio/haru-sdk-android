@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import java.util.Date;
 
 /**
- * HelpCenter의 공지이다.
+ * 고객센터의 공지사항 게시글
  */
 public class Notice {
 
@@ -20,18 +20,34 @@ public class Notice {
         return noticeId;
     }
 
+    /**
+     * 공지 제목을 반환한다.
+     * @return 제목 (String)
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * 공지 내용을 반환한다.
+     * @return 내용 (String)
+     */
     public String getBody() {
         return body;
     }
 
+    /**
+     * 공지에 이미지가 있는 경우 해당 이미지의 URL을 반환한다.
+     * @return 이미지 URL (없을 시, null 반환)
+     */
     public String getImageUrl() {
         return imageUrl;
     }
 
+    /**
+     * 공지 날짜를 반환한다.
+     * @return 공지 날짜 (Date)
+     */
     public Date getCreatedAt() {
         return createdAt;
     }

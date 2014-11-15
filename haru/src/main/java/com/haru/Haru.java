@@ -23,6 +23,7 @@ public class Haru {
 
     private static String mAppKey;
     private static String mSdkKey;
+    private static Context mContext;
 
     /**
      * Haru Android SDK를 초기화한다.
@@ -40,6 +41,7 @@ public class Haru {
 
         mAppKey = appKey;
         mSdkKey = sdkKey;
+        mContext = context;
 
         // Entity에 등록
         Entity.registerSubclass(Installation.class);
@@ -49,6 +51,10 @@ public class Haru {
         useOfflineDataStoring(context);
         Installation.init(context);
         Config.init(context);
+    }
+
+    public static Context getAppContext() {
+        return mContext;
     }
 
     private static void useOfflineDataStoring(Context context) {

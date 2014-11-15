@@ -1,5 +1,6 @@
 package com.haru;
 
+import com.haru.callback.DownloadCallback;
 import com.haru.callback.SaveCallback;
 import com.haru.callback.SaveWithProgressCallback;
 import com.haru.mime.ProgressOutputStream;
@@ -27,6 +28,8 @@ public class HaruFile implements JsonEncodable {
     // 상태
     private boolean isAccessible, isInServer;
 
+//    private static Task retrieve(String fileId, DownloadCallback)
+
     /**
      * 새로운 파일을 생성한다. 아직 서버에 올라가있진 않은 상태이다.
      * @param path 파일 경로
@@ -37,7 +40,7 @@ public class HaruFile implements JsonEncodable {
 
     /**
      * 새로운 파일을 생성한다.
-     * @param file
+     * @param file {@link java.io.File}
      */
     public HaruFile(File file) {
         if (file == null) {
@@ -51,10 +54,21 @@ public class HaruFile implements JsonEncodable {
         this.isAccessible = true;
     }
 
+    /**
+     * 추가 및 수정된 파일을 서버로 업로드한다.
+     * @return Task
+     */
     public Task saveInBackground() {
         return saveInBackground(null);
     }
 
+    /**
+     * 추가 및 수정된 파일을 서버로 업로드한다.
+     * @param saveCallback 업로드 완료시 호출할 콜백.
+     *                     <br/> {@link com.haru.callback.SaveWithProgressCallback}
+     *                     사용시 파일 업로드 중 진행률 (%)을 받을 수 있다.
+     * @return Task
+     */
     public Task saveInBackground(final SaveCallback saveCallback) {
         if (!isAccessible) {
             throw new IllegalStateException("The original file path is not set.");

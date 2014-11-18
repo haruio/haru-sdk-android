@@ -15,6 +15,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -89,6 +90,67 @@ public final class Installation extends Entity {
         updateTimezone();
         updateVersionInfo();
         updateUuid();
+        updateNation();
+        updateModelName();
+    }
+
+    private String getLanguage(Context con) {
+        String TAG = "Installation";
+        Log.d(TAG, "getLanguage() Start");
+        String systemLanguage = con.getResources().getConfiguration().locale.getLanguage();
+
+        if(systemLanguage.equals(Locale.KOREAN.toString())) {
+            Log.d(TAG, "System language is KOREAN.");
+        } else if(systemLanguage.equals(Locale.ENGLISH.toString())) {
+            Log.d(TAG, "System language is ENGLISH.");
+        } else if(systemLanguage.equals(Locale.JAPANESE.toString())) {
+            Log.d(TAG, "System language is JAPANESE.");
+        } else if(systemLanguage.equals(Locale.CHINESE.toString())) {
+            Log.d(TAG, "System language is CHINESS.");
+        } else if(systemLanguage.equals("in")) {
+            Log.d(TAG, "System language is INDONESIAN.");
+        } else {
+            Log.d(TAG, "System language is other. set default(en)");
+            systemLanguage = "en";
+        }
+
+        return systemLanguage;
+    }
+
+    private String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.startsWith(manufacturer)) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+
+    private String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
+    }
+
+    private void updateModelName() {
+
+        String code = getLanguage(context);//context.getResources().getConfiguration().locale.getCountry();
+        Haru.logD("device --> %s", getDeviceName());
+        super.put("device", getDeviceName());
+    }
+    private void updateNation() {
+
+        String code = getLanguage(context);//context.getResources().getConfiguration().locale.getCountry();
+        Haru.logD("nation --> %s", code);
+        super.put("nation", code);
     }
 
     private void updateTimezone() {

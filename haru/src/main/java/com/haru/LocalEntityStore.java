@@ -105,6 +105,7 @@ class LocalEntityStore {
         if (cursor == null) {
             throw new RuntimeException("Failed to query to local datastore.");
         }
+        Haru.logD("cursor count --> %d", cursor.getCount());
 
         // Convert JSON Data to Entity object
         try {
@@ -115,7 +116,8 @@ class LocalEntityStore {
                         cursor.getString(cursor.getColumnIndex("entityId")),
                         new JSONObject(cursor.getString(cursor.getColumnIndex("data")))));
             }
-            sqLiteHelper.close();
+            cursor.close();
+            //sqLiteHelper.close();
             return entities;
 
         } catch (Exception e) {

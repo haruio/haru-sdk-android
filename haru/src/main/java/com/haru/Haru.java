@@ -3,6 +3,10 @@ package com.haru;
 import android.content.Context;
 import android.util.Log;
 
+import com.haru.callback.SaveCallback;
+import com.haru.task.Continuation;
+import com.haru.task.Task;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -206,5 +210,80 @@ public class Haru {
 
     public static void logI(String message, Object ...args) {
         Log.i(TAG, String.format(message, args));
+    }
+
+
+    public static Task trackPurchase(String product, String currency, int price) {
+        return trackPurchase(product, currency, price, null);
+    }
+
+    /**
+     * 인앱결제시 수익내역을 기록한다.
+     * haru.io 관리자 페이지의 Monetization 메뉴에서 확인할 수 있다.
+     *
+     * @param product 구매재품 (null일 시 현재 유저의 이메일 사용)
+     * @param currency 어느나라 통화
+     * @param price 가격
+     * @param callback 콜백
+     * @return Task
+     */
+    public static Task trackPurchase(String product,
+                                     String currency,
+                                     int price,
+                                    final SaveCallback callback) {
+        Param param = new Param();
+        param.put("productName", product);
+        param.put("currencyCode", currency);
+        param.put("price", price);
+
+        User currentuser = User.getCurrentUser();
+        if(currentuser != null){
+            param.put("userId", currentuser.getId());
+        } else {
+            param.put("userId", "");
+        }
+        Installation currentinstallation = Installation.getCurrentInstallation();
+        if(currentinstallation != null){
+            param.put("national", currentinstallation.get("nation"));
+            param.put("appVersion", currentinstallation.get("appVersion"));
+            param.put("androidVersion", currentinstallation.get("androidVersion"));
+            param.put("device", currentinstallation.get("device"));
+        } else {
+            param.put("national", "");
+            param.put("appVersion", "");
+            param.put("androidVersion", "");
+            param.put("device", "");
+        }
+
+
+        // request to help center server
+        Task<HaruResponse> trackPurchaseTask = new HaruRequest("/monetization")
+                .post(param)
+                .executeAsync();
+
+        return trackPurchaseTask.continueWith(new Continuation<HaruResponse, HaruResponse>() {
+            @Override
+            public HaruResponse then(Task<HaruResponse> task) throws Exception {
+
+                // error handling
+                if (task.isFaulted()) {
+                    Haru.stackTrace(task.getError());
+                    if (callback != null) callback.done(new HaruException(task.getError()));
+                    throw task.getError();
+
+                } else if (task.getResult().hasError()) {
+                    Exception e = task.getResult().getError();
+                    Haru.stackTrace(e);
+                    if (callback != null) callback.done(new HaruException(e));
+                    throw e;
+                }
+
+                // callback
+                if (callback != null) callback.done(null);
+
+                return task.getResult();
+            }
+        });
+
     }
 }

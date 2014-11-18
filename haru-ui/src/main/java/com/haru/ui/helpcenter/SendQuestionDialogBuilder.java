@@ -11,6 +11,8 @@ import android.widget.EditText;
 import com.haru.helpcenter.HelpCenter;
 import com.haru.ui.R;
 
+import java.net.URLEncoder;
+
 public class SendQuestionDialogBuilder extends AlertDialog.Builder {
 
 
@@ -27,7 +29,11 @@ public class SendQuestionDialogBuilder extends AlertDialog.Builder {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 // send question to server
-                HelpCenter.sendQuestion("", questionEdit.getText().toString());
+                try {
+                    HelpCenter.sendQuestion("", URLEncoder.encode(questionEdit.getText().toString(), "utf-8"));
+                } catch(Exception e){
+
+                }
             }
         });
         this.setCancelable(true);

@@ -381,14 +381,15 @@ class MqttPushRoute implements MqttSimpleCallback {
         //
         //  for times when the app's Activity UI is not running, the Service
         //   will need to safely store the data that it receives
-        if (addReceivedMessageToStore(topic, messageBody)) {
+        /// TODO: 한번 받은 메시지의 경우 다시 받지 않게 함.. 추후 개선 필요!!
+        //if (addReceivedMessageToStore(topic, messageBody)) {
             // this is a new message - a name we haven't seen before
 
             //
             // inform the app (for times when the Activity UI is running) of the
             //   received message so the app UI can be updated with the new data
             broadcastReceivedMessage(topic, messageBody);
-        }
+        //}
 
         // receiving this message will have kept the connection alive for us, so
         //  we take advantage of this to postpone the next scheduled ping

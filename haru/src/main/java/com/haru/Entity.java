@@ -430,9 +430,18 @@ public class Entity implements JsonEncodable, Parcelable {
      * Entity를 생성한다.
      */
     private Task createEntity(final SaveCallback callback) {
-        Task<HaruResponse> creationTask = new HaruRequest("/classes/" + className)
-                .post((JSONObject) this.toJson())
-                .executeAsync();
+        Task<HaruResponse> creationTask  = null;
+        if(className == "Installations"){
+            Haru.logD(" Installations --> %s", className);
+            // device token 중복 제거하기 위해서..
+            creationTask = new HaruRequest("/installations")
+                    .post((JSONObject) this.toJson())
+                    .executeAsync();
+        } else {
+            creationTask = new HaruRequest("/classes/" + className)
+                    .post((JSONObject) this.toJson())
+                    .executeAsync();
+        }
 
         return creationTask.continueWith(new Continuation<HaruResponse, Entity>() {
             @Override

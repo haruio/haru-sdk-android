@@ -16,8 +16,6 @@
 package com.haru.mqtt.internal;
 
 import com.haru.mqtt.MqttException;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
 
 import java.io.IOException;
 
@@ -28,9 +26,6 @@ import javax.net.ssl.SSLSocketFactory;
  * A network module for connecting over SSL.
  */
 public class SSLNetworkModule extends TCPNetworkModule {
-	private static final String CLASS_NAME = SSLNetworkModule.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT,CLASS_NAME);
-
 	private String[] enabledCiphers;
 	private int handshakeTimeoutSecs;
 
@@ -41,7 +36,6 @@ public class SSLNetworkModule extends TCPNetworkModule {
 	 */
 	public SSLNetworkModule(SSLSocketFactory factory, String host, int port, String resourceContext) {
 		super(factory, host, port, resourceContext);
-		log.setResourceName(resourceContext);
 	}
 
 	/**
@@ -55,24 +49,13 @@ public class SSLNetworkModule extends TCPNetworkModule {
 	 * Sets the enabled cipher suites on the underlying network socket.
 	 */
 	public void setEnabledCiphers(String[] enabledCiphers) {
-		final String methodName = "setEnabledCiphers";
 		this.enabledCiphers = enabledCiphers;
 		if ((socket != null) && (enabledCiphers != null)) {
-			if (log.isLoggable(Logger.FINE)) {
-				String ciphers = "";
-				for (int i=0;i<enabledCiphers.length;i++) {
-					if (i>0) {
-						ciphers+=",";
-					}
-					ciphers+=enabledCiphers[i];
-				}
-				//@TRACE 260=setEnabledCiphers ciphers={0}
-				log.fine(CLASS_NAME,methodName,"260",new Object[]{ciphers});
-			}
 			((SSLSocket) socket).setEnabledCipherSuites(enabledCiphers);
 		}
 	}
-	
+
+
 	public void setSSLhandshakeTimeout(int timeout) {
 		super.setConnectTimeout(timeout);
 		this.handshakeTimeoutSecs = timeout;

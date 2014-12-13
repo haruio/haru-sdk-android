@@ -30,8 +30,6 @@ import com.haru.mqtt.internal.wire.MqttConnect;
 import com.haru.mqtt.internal.wire.MqttDisconnect;
 import com.haru.mqtt.internal.wire.MqttPublish;
 import com.haru.mqtt.internal.wire.MqttWireMessage;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
 
 import java.util.Enumeration;
 import java.util.Properties;
@@ -44,8 +42,6 @@ import java.util.Vector;
 public class ClientComms {
 	public static String 		VERSION = "3.2";
 	public static String 		BUILD_LEVEL = "release";
-	private static final String CLASS_NAME = ClientComms.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT, CLASS_NAME);
 
 	private static final byte CONNECTED	= 0;
 	private static final byte CONNECTING	= 1;
@@ -86,7 +82,6 @@ public class ClientComms {
 		this.clientState = new ClientState(persistence, tokenStore, this.callback, this, pingSender);
 
 		callback.setClientState(clientState);
-		log.setResourceName(getClient().getClientId());
 	}
 
 	CommsReceiver getReceiver() {
@@ -101,17 +96,12 @@ public class ClientComms {
 	 * @throws MqttException
 	 */
 	void internalSend(MqttWireMessage message, MqttToken token) throws MqttException {
-		final String methodName = "internalSend";
-		//@TRACE 200=internalSend key={0} message={1} token={2}
-		log.fine(CLASS_NAME, methodName, "200", new Object[]{message.getKey(), message, token});
 
 		if (token.getClient() == null ) {
 			// Associate the client with the token - also marks it as in use.
 			token.internalTok.setClient(getClient());
 		} else {
 			// Token is already in use - cannot reuse
-			//@TRACE 213=fail: token in use: key={0} message={1} token={2}
-			log.fine(CLASS_NAME, methodName, "213", new Object[]{message.getKey(), message, token});
 
 			throw new MqttException(MqttException.REASON_CODE_TOKEN_INUSE);
 		}
@@ -132,14 +122,11 @@ public class ClientComms {
 	 * stored, before returning.
 	 */
 	public void sendNoWait(MqttWireMessage message, MqttToken token) throws MqttException {
-		final String methodName = "sendNoWait";
 		if (isConnected() ||
 				(!isConnected() && message instanceof MqttConnect) ||
 				(isDisconnecting() && message instanceof MqttDisconnect)) {
 			this.internalSend(message, token);
 		} else {
-			//@TRACE 208=failed: not connected
-			log.fine(CLASS_NAME, methodName, "208");
 			throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_CLIENT_NOT_CONNECTED);
 		}
 	}
@@ -152,13 +139,10 @@ public class ClientComms {
 	 * @throws MqttException  if not disconnected
 	 */
 	public void close() throws MqttException {
-		final String methodName = "close";
 		synchronized (conLock) {
 			if (!isClosed()) {
 				// Must be disconnected before close can take place
 				if (!isDisconnected()) {
-					//@TRACE 224=failed: not disconnected
-					log.fine(CLASS_NAME, methodName, "224");
 
 					if (isConnecting()) {
 						throw new MqttException(MqttException.REASON_CODE_CONNECT_IN_PROGRESS);
@@ -193,12 +177,8 @@ public class ClientComms {
 	 * network connection, receive thread, and keep alive thread.
 	 */
 	public void connect(MqttConnectOptions options, MqttToken token) throws MqttException {
-		final String methodName = "connect";
 		synchronized (conLock) {
 			if (isDisconnected() && !closePending) {
-				//@TRACE 214=state=CONNECTING
-				log.fine(CLASS_NAME,methodName,"214");
-
 				conState = CONNECTING;
 
 				this.conOptions = options;
@@ -220,8 +200,6 @@ public class ClientComms {
 				conbg.start();
 			}
 			else {
-				// @TRACE 207=connect failed: not disconnected {0}
-				log.fine(CLASS_NAME,methodName,"207", new Object[] {new Byte(conState)});
 				if (isClosed() || closePending) {
 					throw new MqttException(MqttException.REASON_CODE_CLIENT_CLOSED);
 				} else if (isConnecting()) {
@@ -236,21 +214,15 @@ public class ClientComms {
 	}
 
 	public void connectComplete( MqttConnack cack, MqttException mex) throws MqttException {
-		final String methodName = "connectComplete";
 		int rc = cack.getReturnCode();
 		synchronized (conLock) {
 			if (rc == 0) {
 				// We've successfully connected
-				// @TRACE 215=state=CONNECTED
-				log.fine(CLASS_NAME,methodName,"215");
-
 				conState = CONNECTED;
 				return;
 			}
 		}
 
-		// @TRACE 204=connect failed: rc={0}
-		log.fine(CLASS_NAME,methodName,"204", new Object[]{new Integer(rc)});
 		throw mex;
 	}
 
@@ -262,7 +234,6 @@ public class ClientComms {
 	 * to ensure that shutdown completes successfully.
 	 */
 	public void shutdownConnection(MqttToken token, MqttException reason) {
-		final String methodName = "shutdownConnection";
 		boolean wasConnected;
 		MqttToken endToken = null; 		//Token to notify after disconnect completes
 
@@ -273,9 +244,6 @@ public class ClientComms {
 				return;
 			}
 			stoppingComms = true;
-
-			//@TRACE 216=state=DISCONNECTING
-			log.fine(CLASS_NAME,methodName,"216");
 
 			wasConnected = (isConnected() || isDisconnecting());
 			conState = DISCONNECTING;
@@ -335,9 +303,6 @@ public class ClientComms {
 		// All disconnect logic has been completed allowing the
 		// client to be marked as disconnected.
 		synchronized(conLock) {
-			//@TRACE 217=state=DISCONNECTED
-			log.fine(CLASS_NAME,methodName,"217");
-
 			conState = DISCONNECTED;
 			stoppingComms = false;
 		}
@@ -373,9 +338,6 @@ public class ClientComms {
 	// disconnect or connect token to notify after disconnect is
 	// complete.
 	private MqttToken handleOldTokens(MqttToken token, MqttException reason) {
-		final String methodName = "handleOldTokens";
-		//@TRACE 222=>
-		log.fine(CLASS_NAME,methodName,"222");
 
 		MqttToken tokToNotifyLater = null;
 		try {
@@ -410,29 +372,18 @@ public class ClientComms {
 	}
 
 	public void disconnect(MqttDisconnect disconnect, long quiesceTimeout, MqttToken token) throws MqttException {
-		final String methodName = "disconnect";
 		synchronized (conLock){
 			if (isClosed()) {
-				//@TRACE 223=failed: in closed state
-				log.fine(CLASS_NAME,methodName,"223");
 				throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_CLIENT_CLOSED);
 			} else if (isDisconnected()) {
-				//@TRACE 211=failed: already disconnected
-				log.fine(CLASS_NAME,methodName,"211");
 				throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_CLIENT_ALREADY_DISCONNECTED);
 			} else if (isDisconnecting()) {
-				//@TRACE 219=failed: already disconnecting
-				log.fine(CLASS_NAME,methodName,"219");
 				throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_CLIENT_DISCONNECTING);
 			} else if (Thread.currentThread() == callback.getThread()) {
-				//@TRACE 210=failed: called on callback thread
-				log.fine(CLASS_NAME,methodName,"210");
 				// Not allowed to call disconnect() from the callback, as it will deadlock.
 				throw ExceptionHelper.createMqttException(MqttException.REASON_CODE_CLIENT_DISCONNECT_PROHIBITED);
 			}
 
-			//@TRACE 218=state=DISCONNECTING
-			log.fine(CLASS_NAME,methodName,"218");
 			conState = DISCONNECTING;
 			DisconnectBG discbg = new DisconnectBG(disconnect,quiesceTimeout,token);
 			discbg.start();
@@ -566,10 +517,7 @@ public class ClientComms {
 		}
 
 		public void run() {
-			final String methodName = "connectBG:run";
 			MqttException mqttEx = null;
-			//@TRACE 220=>
-			log.fine(CLASS_NAME, methodName, "220");
 
 			try {
 				// Reset an exception on existing delivery tokens.
@@ -595,12 +543,8 @@ public class ClientComms {
 				callback.start("MQTT Call: "+getClient().getClientId());				
 				internalSend(conPacket, conToken);
 			} catch (MqttException ex) {
-				//@TRACE 212=connect failed: unexpected exception
-				log.fine(CLASS_NAME, methodName, "212", null, ex);
 				mqttEx = ex;
 			} catch (Exception ex) {
-				//@TRACE 209=connect failed: unexpected exception
-				log.fine(CLASS_NAME, methodName, "209", null, ex);
 				mqttEx =  ExceptionHelper.createMqttException(ex);
 			}
 
@@ -630,9 +574,6 @@ public class ClientComms {
 		}
 		
 		public void run() {
-			final String methodName = "disconnectBG:run";
-			//@TRACE 221=>
-			log.fine(CLASS_NAME, methodName, "221");
 
 			// Allow current inbound and outbound work to complete
 			clientState.quiesce(quiesceTimeout);
@@ -667,9 +608,6 @@ public class ClientComms {
 	}	
 	
 	private void handleRunException(Exception ex) {
-		final String methodName = "handleRunException";
-		//@TRACE 804=exception
-		log.fine(CLASS_NAME,methodName,"804",null, ex);
 		MqttException mex;
 		if ( !(ex instanceof MqttException)) {
 			mex = new MqttException(MqttException.REASON_CODE_CONNECTION_LOST, ex);

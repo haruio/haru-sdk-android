@@ -21,17 +21,12 @@ import com.haru.mqtt.internal.wire.MqttAck;
 import com.haru.mqtt.internal.wire.MqttDisconnect;
 import com.haru.mqtt.internal.wire.MqttOutputStream;
 import com.haru.mqtt.internal.wire.MqttWireMessage;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 
 public class CommsSender implements Runnable {
-	private static final String CLASS_NAME = CommsSender.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT, CLASS_NAME);
-
 	//Sends MQTT packets to the server on its own thread
 	private boolean running 		= false;
 	private Object lifecycle 		= new Object();
@@ -46,7 +41,6 @@ public class CommsSender implements Runnable {
 		this.clientComms = clientComms;
 		this.clientState = clientState;
 		this.tokenStore = tokenStore;
-		log.setResourceName(clientComms.getClient().getClientId());
 	}
 	
 	/**
@@ -66,11 +60,8 @@ public class CommsSender implements Runnable {
 	 * Stops the Sender's thread.  This call will block.
 	 */
 	public void stop() {
-		final String methodName = "stop";
 		
 		synchronized (lifecycle) {
-			//@TRACE 800=stopping sender
-			log.fine(CLASS_NAME,methodName,"800");
 			if (running) {
 				running = false;
 				if (!Thread.currentThread().equals(sendThread)) {
@@ -85,20 +76,15 @@ public class CommsSender implements Runnable {
 				}
 			}
 			sendThread=null;
-			//@TRACE 801=stopped
-			log.fine(CLASS_NAME,methodName,"801");
 		}
 	}
 	
 	public void run() {
-		final String methodName = "run";
 		MqttWireMessage message = null;
 		while (running && (out != null)) {
 			try {
 				message = clientState.get();
 				if (message != null) {
-					//@TRACE 802=network send key={0} msg={1}
-					log.fine(CLASS_NAME,methodName,"802", new Object[] {message.getKey(),message});
 
 					if (message instanceof MqttAck) {
 						out.write(message);
@@ -125,9 +111,6 @@ public class CommsSender implements Runnable {
 						}
 					}
 				} else { // null message
-					//@TRACE 803=get message returned null, stopping}
-					log.fine(CLASS_NAME,methodName,"803");
-
 					running = false;
 				}
 			} catch (MqttException me) {
@@ -136,16 +119,9 @@ public class CommsSender implements Runnable {
 				handleRunException(message, ex);	
 			}
 		} // end while
-		
-		//@TRACE 805=<
-		log.fine(CLASS_NAME, methodName,"805");
-
 	}
 
 	private void handleRunException(MqttWireMessage message, Exception ex) {
-		final String methodName = "handleRunException";
-		//@TRACE 804=exception
-		log.fine(CLASS_NAME,methodName,"804",null, ex);
 		MqttException mex;
 		if ( !(ex instanceof MqttException)) {
 			mex = new MqttException(MqttException.REASON_CODE_CONNECTION_LOST, ex);

@@ -30,7 +30,7 @@ import android.util.Log;
 
 /**
  * Default ping sender implementation on Android. It is based on AlarmManager.
- *
+ * <p/>
  * <p>This class implements the {@link MqttPingSender} pinger interface
  * allowing applications to send ping packet to server every keep alive interval.
  * </p>
@@ -38,134 +38,129 @@ import android.util.Log;
  * @see MqttPingSender
  */
 class AlarmPingSender implements MqttPingSender {
-	// Identifier for Intents, log messages, etc..
-	static final String TAG = "AlarmPingSender";
+    // Identifier for Intents, log messages, etc..
+    static final String TAG = "AlarmPingSender";
+    static final String PING_SENDER = "com.haru.mqtt.pingSender.";
+    static final String PING_WAKELOCK = "com.haru.mqtt.client.";
 
-	// TODO: Add log.
-	private ClientComms comms;
-	private MqttService service;
-	private BroadcastReceiver alarmReceiver;
-	private AlarmPingSender that;
-	private PendingIntent pendingIntent;
-	private volatile boolean hasStarted = false;
+    private ClientComms comms;
+    private Context context;
+    private BroadcastReceiver alarmReceiver;
+    private AlarmPingSender that;
+    private PendingIntent pendingIntent;
+    private volatile boolean hasStarted = false;
 
-	public AlarmPingSender(MqttService service) {
-		if (service == null) {
-			throw new IllegalArgumentException(
-					"Neither service nor client can be null.");
-		}
-		this.service = service;
-		that = this;
-	}
+    public AlarmPingSender(Context context) {
+        if (context == null) {
+            throw new IllegalArgumentException("Context cannot be null.");
+        }
+        this.context = context;
+        that = this;
+    }
 
-	@Override
-	public void init(ClientComms comms) {
-		this.comms = comms;
-		this.alarmReceiver = new AlarmReceiver();
-	}
+    @Override
+    public void init(ClientComms comms) {
+        this.comms = comms;
+        this.alarmReceiver = new AlarmReceiver();
+    }
 
-	@Override
-	public void start() {
-		String action = MqttServiceConstants.PING_SENDER
-				+ comms.getClient().getClientId();
-		Log.d(TAG, "Register alarmreceiver to MqttService"+ action);
-		service.registerReceiver(alarmReceiver, new IntentFilter(action));
+    @Override
+    public void start() {
+        String action = PING_SENDER + comms.getClient().getClientId();
+        Log.d(TAG, "Register alarmreceiver to MqttService" + action);
+        context.registerReceiver(alarmReceiver, new IntentFilter(action));
 
-		pendingIntent = PendingIntent.getBroadcast(service, 0, new Intent(
-				action), PendingIntent.FLAG_UPDATE_CURRENT);
-		
-		schedule(comms.getKeepAlive());
-		hasStarted = true;
-	}
+        pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(action),
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
-	@Override
-	public void stop() {
-		// Cancel Alarm.
-		AlarmManager alarmManager = (AlarmManager) service
-				.getSystemService(Service.ALARM_SERVICE);
-		alarmManager.cancel(pendingIntent);
+        schedule(comms.getKeepAlive());
+        hasStarted = true;
+    }
 
-		Log.d(TAG, "Unregister alarmreceiver to MqttService"+comms.getClient().getClientId());
-		if(hasStarted){
-			hasStarted = false;
-			try{
-				service.unregisterReceiver(alarmReceiver);
-			}catch(IllegalArgumentException e){
-				//Ignore unregister errors.			
-			}
-		}
-	}
+    @Override
+    public void stop() {
+        // Cancel Alarm.
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Service.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
 
-	@Override
-	public void schedule(long delayInMilliseconds) {
-		long nextAlarmInMilliseconds = System.currentTimeMillis()
-				+ delayInMilliseconds;
-		Log.d(TAG, "Schedule next alarm at " + nextAlarmInMilliseconds);
-		AlarmManager alarmManager = (AlarmManager) service
-				.getSystemService(Service.ALARM_SERVICE);
-		alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmInMilliseconds,
-				pendingIntent);
-	}
+        Log.d(TAG, "Unregister alarmreceiver to MqttService" + comms.getClient().getClientId());
+        if (hasStarted) {
+            hasStarted = false;
+            try {
+                context.unregisterReceiver(alarmReceiver);
+            } catch (IllegalArgumentException e) {
+                //Ignore unregister errors.
+            }
+        }
+    }
 
-	/*
-	 * This class sends PingReq packet to MQTT broker
-	 */
-	class AlarmReceiver extends BroadcastReceiver {
-		private WakeLock wakelock;
-		private String wakeLockTag = MqttServiceConstants.PING_WAKELOCK
-				+ that.comms.getClient().getClientId();
+    @Override
+    public void schedule(long delayInMilliseconds) {
+        long nextAlarmInMilliseconds = System.currentTimeMillis()
+                + delayInMilliseconds;
+        Log.d(TAG, "Schedule next alarm at " + nextAlarmInMilliseconds);
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Service.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmInMilliseconds,
+                pendingIntent);
+    }
 
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			// According to the docs, "Alarm Manager holds a CPU wake lock as
-			// long as the alarm receiver's onReceive() method is executing.
-			// This guarantees that the phone will not sleep until you have
-			// finished handling the broadcast.", but this class still get
-			// a wake lock to wait for ping finished.
-			int count = intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, -1);
-			Log.d(TAG, "Ping " + count + " times.");
+    /*
+     * This class sends PingReq packet to MQTT broker
+     */
+    class AlarmReceiver extends BroadcastReceiver {
+        private WakeLock wakelock;
+        private String wakeLockTag = PING_WAKELOCK + that.comms.getClient().getClientId();
 
-			Log.d(TAG, "Check time :" + System.currentTimeMillis());
-			IMqttToken token = comms.checkForActivity();
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // According to the docs, "Alarm Manager holds a CPU wake lock as
+            // long as the alarm receiver's onReceive() method is executing.
+            // This guarantees that the phone will not sleep until you have
+            // finished handling the broadcast.", but this class still get
+            // a wake lock to wait for ping finished.
+            int count = intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, -1);
+            Log.d(TAG, "Ping " + count + " times.");
 
-			// No ping has been sent.
-			if (token == null) {
-				return;
-			}
+            Log.d(TAG, "Check time :" + System.currentTimeMillis());
+            IMqttToken token = comms.checkForActivity();
 
-			// Assign new callback to token to execute code after PingResq
-			// arrives. Get another wakelock even receiver already has one,
-			// release it until ping response returns.
-			if (wakelock == null) {
-				PowerManager pm = (PowerManager) service
-						.getSystemService(Service.POWER_SERVICE);
-				wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-						wakeLockTag);
-			}
-			wakelock.acquire();
-			token.setActionCallback(new IMqttActionListener() {
+            // No ping has been sent.
+            if (token == null) {
+                return;
+            }
 
-				@Override
-				public void onSuccess(IMqttToken asyncActionToken) {
-					Log.d(TAG, "Success. Release lock(" + wakeLockTag + "):"
-							+ System.currentTimeMillis());
-					//Release wakelock when it is done.
-					if(wakelock != null && wakelock.isHeld()){
-						wakelock.release();
-					}
-				}
+            // Assign new callback to token to execute code after PingResq
+            // arrives. Get another wakelock even receiver already has one,
+            // release it until ping response returns.
+            if (wakelock == null) {
+                PowerManager pm = (PowerManager) context.getSystemService(Service.POWER_SERVICE);
+                wakelock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                        wakeLockTag);
+            }
+            wakelock.acquire();
+            token.setActionCallback(new IMqttActionListener() {
 
-				@Override
-				public void onFailure(IMqttToken asyncActionToken,
-						Throwable exception) {
-					Log.d(TAG, "Failure. Release lock(" + wakeLockTag + "):"
-							+ System.currentTimeMillis());
-					//Release wakelock when it is done.
-					if(wakelock != null && wakelock.isHeld()){
-						wakelock.release();
-					}
-				}
-			});
-		}
-	}
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    Log.d(TAG, "Success. Release lock(" + wakeLockTag + "):"
+                            + System.currentTimeMillis());
+                    //Release wakelock when it is done.
+                    if (wakelock != null && wakelock.isHeld()) {
+                        wakelock.release();
+                    }
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken,
+                                      Throwable exception) {
+                    Log.d(TAG, "Failure. Release lock(" + wakeLockTag + "):"
+                            + System.currentTimeMillis());
+                    //Release wakelock when it is done.
+                    if (wakelock != null && wakelock.isHeld()) {
+                        wakelock.release();
+                    }
+                }
+            });
+        }
+    }
 }

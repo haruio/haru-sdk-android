@@ -17,7 +17,6 @@
 package com.haru.mqtt;
 
 import com.haru.mqtt.persist.MqttDefaultFilePersistence;
-import com.haru.mqtt.util.Debug;
 
 /**
  * Lightweight client for talking to an MQTT server using methods that block
@@ -451,12 +450,4 @@ public class MqttClient implements IMqttClient { //), DestinationProvider {
 	public static String generateClientId() {
 		return MqttAsyncClient.generateClientId();
 	}
-
-	/**
-	 * Return a debug object that can be used to help solve problems.
-	 */
-	public Debug getDebug() {
-		return (aClient.getDebug());
-	}
-	
 }

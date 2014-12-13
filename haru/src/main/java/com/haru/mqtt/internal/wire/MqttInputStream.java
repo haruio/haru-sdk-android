@@ -18,8 +18,6 @@ package com.haru.mqtt.internal.wire;
 import com.haru.mqtt.MqttException;
 import com.haru.mqtt.internal.ClientState;
 import com.haru.mqtt.internal.ExceptionHelper;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -34,7 +32,6 @@ import java.io.InputStream;
  */
 public class MqttInputStream extends InputStream {
 	private static final String CLASS_NAME = MqttInputStream.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT, CLASS_NAME);
 
 	private ClientState clientState = null;
 	private DataInputStream in;
@@ -60,7 +57,6 @@ public class MqttInputStream extends InputStream {
 	 * Reads an <code>MqttWireMessage</code> from the stream.
 	 */
 	public MqttWireMessage readMqttWireMessage() throws IOException, MqttException {
-		final String methodName ="readMqttWireMessage";
 		ByteArrayOutputStream bais = new ByteArrayOutputStream();
 		byte first = in.readByte();
 		clientState.notifyReceivedBytes(1);
@@ -81,8 +77,6 @@ public class MqttInputStream extends InputStream {
 		byte[] header = bais.toByteArray();
 		System.arraycopy(header,0,packet,0, header.length);
 		MqttWireMessage message = MqttWireMessage.createWireMessage(packet);
-		// @TRACE 501= received {0} 
-		log.fine(CLASS_NAME, methodName, "501",new Object[] {message});
 		return message;
 	}
 

@@ -20,8 +20,6 @@ import com.haru.mqtt.MqttException;
 import com.haru.mqtt.MqttToken;
 import com.haru.mqtt.internal.wire.MqttPublish;
 import com.haru.mqtt.internal.wire.MqttWireMessage;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -44,8 +42,6 @@ import java.util.Vector;
  *   only one outstanding request of each type is allowed to be outstanding
  */
 public class CommsTokenStore {
-	private static final String CLASS_NAME = CommsTokenStore.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT, CLASS_NAME);
 
 	// Maps message-specific data (usually message IDs) to tokens
 	private Hashtable tokens;
@@ -53,13 +49,8 @@ public class CommsTokenStore {
 	private MqttException closedResponse = null;
 
 	public CommsTokenStore(String logContext) {
-		final String methodName = "<Init>";
-
-		log.setResourceName(logContext);
 		this.tokens = new Hashtable();
 		this.logContext = logContext;
-		//@TRACE 308=<>
-		log.fine(CLASS_NAME,methodName,"308");//,new Object[]{message});
 
 	}
 
@@ -87,10 +78,7 @@ public class CommsTokenStore {
 	}
 	
 	public MqttToken removeToken(String key) {
-		final String methodName = "removeToken";
-		//@TRACE 306=key={0}
-		log.fine(CLASS_NAME,methodName,"306",new Object[]{key});
-		
+
 		if ( null != key ){
 		    return (MqttToken) tokens.remove(key);
 		}
@@ -104,20 +92,15 @@ public class CommsTokenStore {
 	 * needed to re-build the token.
 	 */
 	protected MqttDeliveryToken restoreToken(MqttPublish message) {
-		final String methodName = "restoreToken";
 		MqttDeliveryToken token;
 		synchronized(tokens) {
 			String key = new Integer(message.getMessageId()).toString();
 			if (this.tokens.containsKey(key)) {
 				token = (MqttDeliveryToken)this.tokens.get(key);
-				//@TRACE 302=existing key={0} message={1} token={2}
-				log.fine(CLASS_NAME,methodName, "302",new Object[]{key, message,token});
 			} else {
 				token = new MqttDeliveryToken(logContext);
 				token.internalTok.setKey(key);
 				this.tokens.put(key, token);
-				//@TRACE 303=creating new token key={0} message={1} token={2}
-				log.fine(CLASS_NAME,methodName,"303",new Object[]{key, message, token});
 			}
 		}
 		return token;
@@ -126,14 +109,11 @@ public class CommsTokenStore {
 	// For outbound messages store the token in the token store 
 	// For pubrel use the existing publish token 
 	protected void saveToken(MqttToken token, MqttWireMessage message) throws MqttException {
-		final String methodName = "saveToken";
 
 		synchronized(tokens) {
 			if (closedResponse == null) {
 				String key = message.getKey();
-				//@TRACE 300=key={0} message={1}
-				log.fine(CLASS_NAME,methodName,"300",new Object[]{key, message});
-				
+
 				saveToken(token,key);
 			} else {
 				throw closedResponse;
@@ -142,44 +122,32 @@ public class CommsTokenStore {
 	}
 	
 	protected void saveToken(MqttToken token, String key) {
-		final String methodName = "saveToken";
 
 		synchronized(tokens) {
-			//@TRACE 307=key={0} token={1}
-			log.fine(CLASS_NAME,methodName,"307",new Object[]{key,token.toString()});
 			token.internalTok.setKey(key);
 			this.tokens.put(key, token);
 		}
 	}
 
 	protected void quiesce(MqttException quiesceResponse) {
-		final String methodName = "quiesce";
 
 		synchronized(tokens) {
-			//@TRACE 309=resp={0}
-			log.fine(CLASS_NAME,methodName,"309",new Object[]{quiesceResponse});
 
 			closedResponse = quiesceResponse;
 		}
 	}
 	
 	public void open() {
-		final String methodName = "open";
 
 		synchronized(tokens) {
-			//@TRACE 310=>
-			log.fine(CLASS_NAME,methodName,"310");
 
 			closedResponse = null;
 		}
 	}
 
 	public MqttDeliveryToken[] getOutstandingDelTokens() {
-		final String methodName = "getOutstandingDelTokens";
 
 		synchronized(tokens) {
-			//@TRACE 311=>
-			log.fine(CLASS_NAME,methodName,"311");
 
 			Vector list = new Vector();
 			Enumeration enumeration = tokens.elements();
@@ -200,11 +168,8 @@ public class CommsTokenStore {
 	}
 	
 	public Vector getOutstandingTokens() {
-		final String methodName = "getOutstandingTokens";
 
 		synchronized(tokens) {
-			//@TRACE 312=>
-			log.fine(CLASS_NAME,methodName,"312");
 
 			Vector list = new Vector();
 			Enumeration enumeration = tokens.elements();
@@ -223,9 +188,6 @@ public class CommsTokenStore {
 	 * Empties the token store without notifying any of the tokens.
 	 */
 	public void clear() {
-		final String methodName = "clear";
-		//@TRACE 305=> {0} tokens
-		log.fine(CLASS_NAME, methodName, "305", new Object[] {new Integer(tokens.size())});
 		synchronized(tokens) {
 			tokens.clear();
 		}

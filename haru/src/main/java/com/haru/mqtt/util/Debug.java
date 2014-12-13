@@ -15,10 +15,6 @@
  */
 package com.haru.mqtt.util;
 
-import com.haru.mqtt.internal.ClientComms;
-import com.haru.mqtt.logging.Logger;
-import com.haru.mqtt.logging.LoggerFactory;
-
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -33,111 +29,8 @@ import java.util.Properties;
  */
 public class Debug {
 	
-	private static final String CLASS_NAME = ClientComms.class.getName();
-	private static final Logger log = LoggerFactory.getLogger(LoggerFactory.MQTT_CLIENT_MSG_CAT,CLASS_NAME);
 	private static final String separator = "==============";
 	private static final String lineSep = System.getProperty("line.separator","\n");
-	
-	private String clientID;
-	private ClientComms comms;
-	
-	/**
-	 * Set the debug facility up for a specific client
-	 * @param clientID  the ID of the client being debugged
-	 * @param comms    the ClientComms object of the client being debugged
-	 */
-	public Debug(String clientID, ClientComms comms) {
-		this.clientID = clientID;
-		this.comms = comms;
-		log.setResourceName(clientID);
-	}
-
-	/**
-	 * Dump maximum debug info.
-	 * This includes state specific to a client as well 
-	 * as debug that is JVM wide like trace and system properties.
-	 * All state is written as debug log entries. 
-	 */
-	public void dumpClientDebug() { 
-		dumpClientComms();
-		dumpConOptions();
-		dumpClientState();
-		dumpBaseDebug();
-	}
-	
-	/**
-	 * Dump of JVM wide debug info.
-	 * This includes trace and system properties.
-	 * Includes trace and system properties
-	 */
-	public void dumpBaseDebug() {
-		dumpVersion();
-		dumpSystemProperties();
-		dumpMemoryTrace();
-	}
-
-	/**
-	 * If memory trace is being used a request is made to push it 
-	 * to the target handler.
-	 */
-	protected void dumpMemoryTrace() {
-		log.dumpTrace();
-	}
-	
-	/**
-	 * Dump information that show the version of the MQTT client being used.
-	 */
-	protected void dumpVersion() {
-		StringBuffer vInfo = new StringBuffer();
-    	vInfo.append(lineSep+separator+" Version Info "+ separator+lineSep);
-    	vInfo.append(left("Version",20,' ') + ":  "+ ClientComms.VERSION + lineSep);
-    	vInfo.append(left("Build Level",20,' ') + ":  "+ ClientComms.BUILD_LEVEL + lineSep);
-    	vInfo.append(separator+separator+separator+lineSep);
-    	log.fine(CLASS_NAME,"dumpVersion", vInfo.toString());
-	}
-
-	/**
-	 * Dump the current set of system.properties to a log record
-	 */
-	public void dumpSystemProperties() {
-		
-	    Properties sysProps = System.getProperties();
-    	log.fine(CLASS_NAME,"dumpSystemProperties", dumpProperties(sysProps, "SystemProperties").toString());
-	}
-
-	/**
-	 * Dump interesting variables from ClientState
-	 */
-	public void dumpClientState() {
-		Properties props = null;
-	    if (comms != null && comms.getClientState() != null ) {
-	    	props = comms.getClientState().getDebug();
-	    	log.fine(CLASS_NAME,"dumpClientState", dumpProperties(props, clientID + " : ClientState").toString());
-	    }
-	}
-
-	/**
-	 * Dump interesting variables from ClientComms
-	 */
-	public void dumpClientComms() {
-		Properties props = null;
-	    if (comms != null) {
-	    	props = comms.getDebug();
-	    	log.fine(CLASS_NAME,"dumpClientComms", dumpProperties(props, clientID + " : ClientComms").toString());
-	    }
-	}
-	
-	/**
-	 * Dump Connection options
-	 */
-	public void dumpConOptions() {
-		Properties props = null;
-	    if (comms != null) {
-	    	props = comms.getConOptions().getDebug();
-	    	log.fine(CLASS_NAME,"dumpConOptions", dumpProperties(props, clientID + " : Connect Options").toString());
-	    }
-	}
-
 
 	/**
 	 * Return a set of properties as a formatted string

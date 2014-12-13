@@ -2,11 +2,17 @@ package com.haru.push;
 
 import android.app.ActivityManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 
 import com.haru.Haru;
+import com.haru.Installation;
 
 /**
  * 백그라운드에서 실행되면서 Push를 수신해서 AndroidManifest.xml에 지정된 PushReceiver를 호출한다. <br/>
@@ -21,11 +27,12 @@ public class PushService extends Service {
     public static final String ACTION_PUSH_STATUS_INTENT = "com.haru.push.STATUS";
     public static final String STATUS_INTENT_EXTRA = "intent.extra.status";
 
-    // constant used internally to schedule the next ping event
-    public static final String ACTION_PUSH_PING = "com.haru.push.PING";
-
     // using MQTT - Haru currently does not support GCM (Google Cloud Messaging)
     private MqttPushRoute mqttPushRoute;
+
+    private NetworkConnectionIntentReceiver networkConnectionMonitor;
+    private BackgroundDataStatusReceiver backgroundDataStatusMonitor;
+    private boolean backgroundDataEnabled = true;
 
     /**
      * Start the service if it's not started.
@@ -56,16 +63,17 @@ public class PushService extends Service {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void onStart(final Intent intent, final int startId) {
         // This is the old onStart method that will be called on the pre-2.0
         // platform.  On 2.0 or later we override onStartCommand() so this
         // method will not be called.
-        start(intent, startId);
+        start();
     }
 
     @Override
     public int onStartCommand(final Intent intent, int flags, final int startId) {
-        start(intent, startId);
+        start();
 
         // return START_NOT_STICKY - we want this Service to be left running
         //  unless explicitly stopped, and it's process is killed, we want it to
@@ -76,13 +84,9 @@ public class PushService extends Service {
     /**
      * Called when the PushService is started.
      */
-    private void start(final Intent intent, final int startId) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mqttPushRoute.handleStart(intent, startId);
-            }
-        }, "MQTTservice").start();
+    private void start() {
+        registerBroadcastReceivers();
+        mqttPushRoute.connect();
 
         Haru.logI("Push service started!");
     }
@@ -90,11 +94,104 @@ public class PushService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mqttPushRoute.serviceDestroyed();
+        unregisterBroadcastReceivers();
+        mqttPushRoute.disconnect();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mqttPushRoute.serviceBind();
+        return null; // This service is not bindable.
     }
+
+    @SuppressWarnings("deprecation")
+    private void registerBroadcastReceivers() {
+        if (networkConnectionMonitor == null) {
+            networkConnectionMonitor = new NetworkConnectionIntentReceiver();
+            registerReceiver(networkConnectionMonitor, new IntentFilter(
+                    ConnectivityManager.CONNECTIVITY_ACTION));
+        }
+
+        if (Build.VERSION.SDK_INT < 14 /**Build.VERSION_CODES.ICE_CREAM_SANDWICH**/) {
+            // Support the old system for background data preferences
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            backgroundDataEnabled = cm.getBackgroundDataSetting();
+            if (backgroundDataStatusMonitor == null) {
+                backgroundDataStatusMonitor = new BackgroundDataStatusReceiver();
+                registerReceiver(backgroundDataStatusMonitor,
+                        new IntentFilter(ConnectivityManager.ACTION_BACKGROUND_DATA_SETTING_CHANGED));
+            }
+        }
+    }
+
+    private void unregisterBroadcastReceivers(){
+        if(networkConnectionMonitor != null){
+            unregisterReceiver(networkConnectionMonitor);
+            networkConnectionMonitor = null;
+        }
+
+        if (Build.VERSION.SDK_INT < 14) {
+            if(backgroundDataStatusMonitor != null){
+                unregisterReceiver(backgroundDataStatusMonitor);
+            }
+        }
+    }
+
+    /*
+     * Called in response to a change in network connection - after losing a
+     * connection to the server, this allows us to wait until we have a usable
+     * data connection again
+     */
+    private class NetworkConnectionIntentReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // we protect against the phone switching off
+            // by requesting a wake lock - we request the minimum possible wake
+            // lock - just enough to keep the CPU running until we've finished
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MQTT");
+            wl.acquire();
+
+            if (isNetworkOnline()) {
+                // we have an internet connection - have another try at
+                // connecting
+                mqttPushRoute.reconnect();
+            } else mqttPushRoute.offline();
+
+            wl.release();
+        }
+    }
+
+    /**
+     * Detect changes of the Allow Background Data setting - only used below
+     * ICE_CREAM_SANDWICH
+     */
+    private class BackgroundDataStatusReceiver extends BroadcastReceiver {
+
+        @SuppressWarnings("deprecation")
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            Haru.logD("Push: Reconnect since background data is enabled.");
+            if (cm.getBackgroundDataSetting()) {
+                if (!backgroundDataEnabled) {
+                    // we have the Internet connection - have another try at reconnecting.
+                    backgroundDataEnabled = true;
+                    mqttPushRoute.reconnect();
+                }
+            } else {
+                backgroundDataEnabled = false;
+                mqttPushRoute.offline();
+            }
+        }
+    }
+
+    public boolean isNetworkOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null
+                && cm.getActiveNetworkInfo().isAvailable()
+                && cm.getActiveNetworkInfo().isConnected()
+                && backgroundDataEnabled;
+    }
+
 }

@@ -208,6 +208,10 @@ public class Haru {
         if (IS_DEBUG_BUILD) Log.d(TAG, String.format(message, args));
     }
 
+    public static void logE(String message, Object ...args) {
+        Log.e(TAG, String.format(message, args));
+    }
+
     public static void logI(String message, Object ...args) {
         Log.i(TAG, String.format(message, args));
     }

@@ -40,6 +40,9 @@
         <activity android:label="Notices"
             android:name="com.haru.test.HelpCenterNoticeActivity" />
 
+        <activity android:label="Push Loss Test"
+            android:name="com.haru.test.PushLossTestActivity" />
+
         <service android:name="com.haru.push.PushService"
             android:enabled="true"
             android:exported="true" />

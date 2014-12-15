@@ -52,6 +52,11 @@ public class MainActivity extends Activity {
                 }
                 break;
 
+            case R.id.push_loss_btn:
+                Intent lossIntent = new Intent(this, PushLossTestActivity.class);
+                startActivity(lossIntent);
+                break;
+
             case R.id.config_test_btn:
                 configTest();
                 break;

@@ -47,6 +47,11 @@
                 android:id="@+id/push_noti_btn"
                 android:text="SEND PUSH NOTIFICATION" />
 
+            <Button
+                style="@style/TestMenuButton"
+                android:id="@+id/push_loss_btn"
+                android:text="PUSH LOSS TEST" />
+
 
             <TextView
                 style="@style/TestMenuCategory"

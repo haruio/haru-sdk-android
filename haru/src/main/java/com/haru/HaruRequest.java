@@ -41,7 +41,7 @@ import java.util.concurrent.Callable;
  */
 public class HaruRequest {
 
-    private static final String HARU_ENDPOINT = "http://api.haru.io/1";
+    private static final String HARU_ENDPOINT = "http://api.plugy.io/1";
 
     private static final String USER_AGENT =
             "Haru SDK " + Haru.getSdkVersion() + " / Android " + Build.VERSION.RELEASE;

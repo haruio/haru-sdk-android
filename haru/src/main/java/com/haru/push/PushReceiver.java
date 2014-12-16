@@ -30,8 +30,6 @@ public class PushReceiver extends BroadcastReceiver {
             Push push = intent.getParcelableExtra(Push.INTENT_EXTRA);
             if (push == null) return;
 
-            Haru.logI("Push Received! %s", push.getMessage());
-
             // 기본 핸들러
             onPush(context, push);
 

@@ -30,6 +30,18 @@ public class Push implements Parcelable {
     private Param data;
     private String query;
 
+    /**
+     * Push를 사용한다.
+     * @param context Application Context
+     */
+    public static void init(Context context) {
+        PushService.startIfRequired(context);
+    }
+
+    /**
+     * Push 메세지를 생성한다.
+     * {@link PushReceiver#onMessage(Context, Push)}에서 수신할 수 있다.
+     */
     public static class MessageBuilder {
         private ArrayList<String> channels;
         private Param data;
@@ -38,7 +50,7 @@ public class Push implements Parcelable {
 
         public MessageBuilder() {
             data = new Param();
-            channels = new ArrayList<String>();
+            channels = new ArrayList<>();
 
             data.put("type", Push.TYPE_MESSAGE);
         }
@@ -78,6 +90,10 @@ public class Push implements Parcelable {
         }
     }
 
+    /**
+     * Push 알림을 생성한다.
+     * {@link PushReceiver#onNotification(Context, Push)}에서 알림을 커스터마이징할 수 있다.
+     */
     public static class NotificationBuilder {
         private ArrayList<String> channels;
         private Param data;
@@ -135,17 +151,9 @@ public class Push implements Parcelable {
         return 0;
     }
 
-    /**
-     * Push를 사용한다.
-     * @param context Application Context
-     */
-    public static void init(Context context) {
-        PushService.startIfRequired(context);
-    }
-
     private Push() {
         data = new Param();
-        channels = new ArrayList<String>();
+        channels = new ArrayList<>();
     }
 
     /**
@@ -239,6 +247,9 @@ public class Push implements Parcelable {
         return query;
     }
 
+    /**
+     * Push 메세지를 발송한다.
+     */
     public void sendInBackground() {
         Param params = new Param();
         if (query != null) params.put("users", query); // TODO: Fix

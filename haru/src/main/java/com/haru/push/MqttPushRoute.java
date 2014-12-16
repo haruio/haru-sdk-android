@@ -173,8 +173,8 @@ class MqttPushRoute implements MqttCallback {
     /**
      * Subscribe to one or more topics
      *
-     * @param topic             a list of possibly wildcarded topic names
-     * @param qos               requested quality of service for each topic
+     * @param topic a list of possibly wildcarded topic names
+     * @param qos requested quality of service for each topic
      */
     public void subscribe(final String[] topic, final int[] qos) {
         if ((myClient != null) && (myClient.isConnected())) {
@@ -190,42 +190,7 @@ class MqttPushRoute implements MqttCallback {
     }
 
     /**
-     * Unsubscribe from a topic
-     *
-     * @param topic             a possibly wildcarded topic name
-     */
-    void unsubscribe(final String topic) {
-        if ((myClient != null) && (myClient.isConnected())) {
-            try {
-                myClient.unsubscribe(topic);
-            } catch (Exception e) {
-                Log.e(TAG, "Exception : " + e.getMessage());
-                e.printStackTrace();
-            }
-
-        } else Log.e("subscribe", "not connected");
-    }
-
-    /**
-     * Unsubscribe from one or more topics
-     *
-     * @param topic             a list of possibly wildcarded topic names
-     */
-    void unsubscribe(final String[] topic) {
-        if ((myClient != null) && (myClient.isConnected())) {
-            try {
-                myClient.unsubscribe(topic);
-            } catch (Exception e) {
-                Log.e(TAG, "Exception : " + e.getMessage());
-                e.printStackTrace();
-            }
-
-        } else Log.e("subscribe", "not connected");
-    }
-
-    /**
      * Callback for connectionLost
-     *
      * @param why the exeception causing the break in communications
      */
     @Override
@@ -250,7 +215,6 @@ class MqttPushRoute implements MqttCallback {
 
     /**
      * Callback when a message is received
-     *
      * @param topic   the topic on which the message was received
      * @param message the message itself
      */

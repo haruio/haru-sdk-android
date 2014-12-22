@@ -11,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -288,6 +287,5 @@ public class Haru {
                 return task.getResult();
             }
         });
-
     }
 }

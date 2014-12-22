@@ -9,16 +9,16 @@ import android.util.Log;
 
 import com.haru.Haru;
 import com.haru.Installation;
-import com.haru.mqtt.IMqttActionListener;
-import com.haru.mqtt.IMqttDeliveryToken;
-import com.haru.mqtt.IMqttToken;
-import com.haru.mqtt.MqttAsyncClient;
-import com.haru.mqtt.MqttCallback;
-import com.haru.mqtt.MqttClientPersistence;
-import com.haru.mqtt.MqttConnectOptions;
-import com.haru.mqtt.MqttException;
-import com.haru.mqtt.MqttMessage;
-import com.haru.mqtt.persist.MqttDefaultFilePersistence;
+import com.haru.push.mqtt.IMqttActionListener;
+import com.haru.push.mqtt.IMqttDeliveryToken;
+import com.haru.push.mqtt.IMqttToken;
+import com.haru.push.mqtt.MqttAsyncClient;
+import com.haru.push.mqtt.MqttCallback;
+import com.haru.push.mqtt.MqttClientPersistence;
+import com.haru.push.mqtt.MqttConnectOptions;
+import com.haru.push.mqtt.MqttException;
+import com.haru.push.mqtt.MqttMessage;
+import com.haru.push.mqtt.persist.MqttDefaultFilePersistence;
 
 import java.io.File;
 
@@ -93,7 +93,7 @@ class MqttPushRoute implements MqttCallback {
                     Haru.logD("Push: myClient != null and the client is not connected");
                     Haru.logD("Push: Do Real connect!");
                     setConnectingState(true);
-                    myClient.connect(null, null, listener);
+                    myClient.connect(new MqttConnectOptions(), null, listener);
                 }
             }
 
@@ -196,6 +196,8 @@ class MqttPushRoute implements MqttCallback {
     @Override
     public void connectionLost(Throwable why) {
         Haru.logD("Push: connectionLost(%s)", why.getMessage());
+        why.printStackTrace();
+
         disconnected = true;
         try {
             myClient.disconnect();
@@ -296,7 +298,7 @@ class MqttPushRoute implements MqttCallback {
                     }
                 };
 
-                myClient.connect(null, null, listener);
+                myClient.connect(new MqttConnectOptions(), null, listener);
                 setConnectingState(true);
 
             } catch (MqttException e) {

@@ -3,7 +3,9 @@ package com.haru.push;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
+import com.haru.Haru;
 import com.haru.HaruRequest;
 import com.haru.Installation;
 import com.haru.Param;
@@ -13,6 +15,7 @@ import com.haru.task.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,7 +53,7 @@ public class Push implements Parcelable {
 
         public MessageBuilder() {
             data = new Param();
-            channels = new ArrayList<>();
+            channels = new ArrayList<String>();
 
             data.put("type", Push.TYPE_MESSAGE);
         }
@@ -153,7 +156,7 @@ public class Push implements Parcelable {
 
     private Push() {
         data = new Param();
-        channels = new ArrayList<>();
+        channels = new ArrayList<String>();
     }
 
     /**
@@ -232,7 +235,8 @@ public class Push implements Parcelable {
      */
     public int getType() {
         Object value = data.get("type");
-        return (value == null ? 0 : (Integer) value);
+        Haru.logE("Push.getType(data type=%s)", value.getClass().getCanonicalName());
+        return value == null ? 0 : (Integer) value;
     }
 
     public String getTitle() {

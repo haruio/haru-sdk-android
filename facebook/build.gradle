@@ -52,7 +52,7 @@ task setVersion {
     }
 }
 
-uploadArchives {
+/*uploadArchives {
     repositories.mavenDeployer {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
@@ -93,7 +93,7 @@ uploadArchives {
             }
         }
     }
-}
+}*/
 
 uploadArchives.dependsOn(setVersion)
 

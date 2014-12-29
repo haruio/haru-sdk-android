@@ -1,4 +1,4 @@
-Haru SDK for Android
+Plugy SDK for Android
 ================
 
-Haru is mobile Backend-as-a-Service (http://haru.io/)
+Plugy is mobile Backend-as-a-Service (http://plugy.io/)

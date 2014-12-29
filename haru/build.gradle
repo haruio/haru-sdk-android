@@ -4,12 +4,12 @@ buildscript {
     }
 }
 
-group = 'io.haru'
-version = '0.1.0'
-
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 apply plugin: 'signing'
+
+version = '0.1.0'
+group = 'io.plugy'
 
 android {
     compileSdkVersion 18
@@ -55,11 +55,12 @@ android.libraryVariants.all { variant ->
             linksOffline "http://d.android.com/reference","${android.sdkDirectory}/docs/reference"
         }
         exclude '**/BuildConfig.java'
-        title 'Haru Android SDK'
+        title 'Plugy Android SDK'
     }
 }
 
 signing {
+    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
     sign configurations.archives
 }
 
@@ -71,10 +72,20 @@ uploadArchives {
 
             configuration = configurations.archives
 
-            repository(url: uri('../repo'))
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
             pom.project {
-                name 'Haru SDK for Android'
-                description "Haru is mobile Backend-as-a-Service and this is SDK of Haru."
+
+                name 'Plugy SDK for Android'
+                artifactId = 'core'
+                packaging 'aar'
+                description "Plugy is mobile Backend-as-a-Service (BaaS) and this is SDK of Plugy."
                 url 'https://github.com/soma5mbaas/haru-sdk-android.git'
                 inceptionYear '2014'
 
@@ -93,8 +104,8 @@ uploadArchives {
                     }
                 }
                 organization {
-                    name 'Haru'
-                    url 'http://haru.io'
+                    name 'Plugy'
+                    url 'http://plugy.io'
                 }
                 developers {
                     developer {

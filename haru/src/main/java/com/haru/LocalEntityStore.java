@@ -105,7 +105,6 @@ class LocalEntityStore {
         if (cursor == null) {
             throw new RuntimeException("Failed to query to local datastore.");
         }
-        Haru.logD("cursor count --> %d", cursor.getCount());
 
         // Convert JSON Data to Entity object
         try {

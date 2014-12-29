@@ -23,10 +23,6 @@ public class PushService extends Service {
     public static final String ACTION_PUSH_RECEIVED = "com.haru.push.RECEIVED";
     public static final String TOPIC_INTENT_EXTRA = "intent.extra.topic";
 
-    // constants used to tell the Activity UI the connection status
-    public static final String ACTION_PUSH_STATUS_INTENT = "com.haru.push.STATUS";
-    public static final String STATUS_INTENT_EXTRA = "intent.extra.status";
-
     // using MQTT - Haru currently does not support GCM (Google Cloud Messaging)
     private MqttPushRoute mqttPushRoute;
 
@@ -111,7 +107,7 @@ public class PushService extends Service {
                     ConnectivityManager.CONNECTIVITY_ACTION));
         }
 
-        if (Build.VERSION.SDK_INT < 14 /**Build.VERSION_CODES.ICE_CREAM_SANDWICH**/) {
+        if (Build.VERSION.SDK_INT < 14) {
             // Support the old system for background data preferences
             ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
             backgroundDataEnabled = cm.getBackgroundDataSetting();
@@ -193,5 +189,4 @@ public class PushService extends Service {
                 && cm.getActiveNetworkInfo().isConnected()
                 && backgroundDataEnabled;
     }
-
 }

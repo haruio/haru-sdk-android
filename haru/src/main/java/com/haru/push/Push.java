@@ -235,7 +235,6 @@ public class Push implements Parcelable {
      */
     public int getType() {
         Object value = data.get("type");
-        Haru.logE("Push.getType(data type=%s)", value.getClass().getCanonicalName());
         return value == null ? 0 : (Integer) value;
     }
 

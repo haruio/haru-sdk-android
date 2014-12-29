@@ -4,29 +4,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.facebook.AccessToken;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
-import com.facebook.android.Util;
 import com.facebook.internal.Utility;
 import com.facebook.model.GraphUser;
 import com.haru.Haru;
 import com.haru.HaruException;
-import com.haru.HaruResponse;
-import com.haru.Installation;
 import com.haru.User;
 import com.haru.callback.LoginCallback;
-import com.haru.task.Task;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 

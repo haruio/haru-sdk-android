@@ -98,7 +98,6 @@ class AlarmPingSender implements MqttPingSender {
     public void schedule(long delayInMilliseconds) {
         long nextAlarmInMilliseconds = System.currentTimeMillis()
                 + delayInMilliseconds;
-        Log.d(TAG, "Schedule next alarm at " + nextAlarmInMilliseconds);
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Service.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC_WAKEUP, nextAlarmInMilliseconds,
                 pendingIntent);
@@ -121,7 +120,6 @@ class AlarmPingSender implements MqttPingSender {
             int count = intent.getIntExtra(Intent.EXTRA_ALARM_COUNT, -1);
             Log.d(TAG, "Ping " + count + " times.");
 
-            Log.d(TAG, "Check time :" + System.currentTimeMillis());
             IMqttToken token = comms.checkForActivity();
 
             // No ping has been sent.

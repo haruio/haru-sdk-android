@@ -49,7 +49,7 @@ class MqttPushRoute implements MqttCallback {
     MqttPushRoute(Context context) {
         this.context = context;
         this.options = new MqttConnectOptions();
-        options.setCleanSession(true); // to get retained messages
+        options.setCleanSession(false); // to get retained messages
     }
 
     /**
@@ -125,6 +125,7 @@ class MqttPushRoute implements MqttCallback {
         // subscribe to topic (appKey:installationId), QoS 2
         Installation installation = Installation.getCurrentInstallation();
         subscribe(Haru.getAppKey() + ":" + installation.getString("deviceToken"), 2);
+        Haru.logD("The topic is %s:%s", Haru.getAppKey(), installation.getString("deviceToken"));
 
         releaseWakeLock();
     }
@@ -198,8 +199,7 @@ class MqttPushRoute implements MqttCallback {
      */
     @Override
     public void connectionLost(Throwable why) {
-        Haru.logD("Push: connectionLost(%s)", why.getMessage());
-        why.printStackTrace();
+        Haru.logD("Push: connectionLost(%s)", why.getCause().getMessage());
 
         disconnected = true;
         try {

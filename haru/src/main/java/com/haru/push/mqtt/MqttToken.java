@@ -67,7 +67,7 @@ public class MqttToken implements IMqttToken {
 		internalTok.waitForCompletion(timeout);
 	}
 	
-	public IMqttAsyncClient getClient() {
+	public IMqttClient getClient() {
 		return internalTok.getClient();
 	}
 	

@@ -21,7 +21,7 @@ package com.haru.push.mqtt;
  * events related to the client occur.
  * Classes implementing this interface
  * can be registered on both types of client: {@link IMqttClient#setCallback(MqttCallback)}
- * and {@link IMqttAsyncClient#setCallback(MqttCallback)}
+ * and {@link IMqttClient#setCallback(MqttCallback)}
  */
 public interface MqttCallback {
 	/**

@@ -17,7 +17,7 @@ package com.haru.push.mqtt.internal;
 
 import com.haru.push.mqtt.IMqttActionListener;
 import com.haru.push.mqtt.IMqttToken;
-import com.haru.push.mqtt.MqttAsyncClient;
+import com.haru.push.mqtt.MqttClient;
 import com.haru.push.mqtt.MqttClientPersistence;
 import com.haru.push.mqtt.MqttConnectOptions;
 import com.haru.push.mqtt.MqttException;
@@ -36,7 +36,7 @@ import com.haru.push.mqtt.MqttToken;
 public class ConnectActionListener implements IMqttActionListener {
 
   private MqttClientPersistence persistence;
-  private MqttAsyncClient client;
+  private MqttClient client;
   private ClientComms comms;
   private MqttConnectOptions options;
   private MqttToken userToken;
@@ -54,7 +54,7 @@ public class ConnectActionListener implements IMqttActionListener {
    * @param userCallback
    */
   public ConnectActionListener(
-      MqttAsyncClient client,
+      MqttClient client,
       MqttClientPersistence persistence,
       ClientComms comms,
       MqttConnectOptions options,

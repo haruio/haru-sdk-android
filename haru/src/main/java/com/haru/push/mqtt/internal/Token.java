@@ -17,7 +17,7 @@
 package com.haru.push.mqtt.internal;
 
 import com.haru.push.mqtt.IMqttActionListener;
-import com.haru.push.mqtt.IMqttAsyncClient;
+import com.haru.push.mqtt.IMqttClient;
 import com.haru.push.mqtt.MqttException;
 import com.haru.push.mqtt.MqttMessage;
 import com.haru.push.mqtt.internal.wire.MqttAck;
@@ -40,7 +40,7 @@ public class Token {
 	
 	private String key;
 	
-	private IMqttAsyncClient client = null;
+	private IMqttClient client = null;
 	private IMqttActionListener callback = null;
 	
 	private Object userContext = null;
@@ -240,11 +240,11 @@ public class Token {
 		}
 	}
 	
-	public IMqttAsyncClient getClient() {
+	public IMqttClient getClient() {
 		return client;
 	}
 	
-	protected void setClient(IMqttAsyncClient client) {
+	protected void setClient(IMqttClient client) {
 		this.client = client;
 	}
 

@@ -99,7 +99,7 @@ public interface IMqttToken {
 	 * Returns the MQTT client that is responsible for processing the asynchronous
 	 * action
 	 */
-	public IMqttAsyncClient getClient();
+	public IMqttClient getClient();
 
 	/**
 	 * Returns the topic string(s) for the action being tracked by this

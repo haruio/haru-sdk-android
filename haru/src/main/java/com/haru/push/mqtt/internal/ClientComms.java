@@ -15,7 +15,7 @@
  */
 package com.haru.push.mqtt.internal;
 
-import com.haru.push.mqtt.IMqttAsyncClient;
+import com.haru.push.mqtt.IMqttClient;
 import com.haru.push.mqtt.MqttCallback;
 import com.haru.push.mqtt.MqttClientPersistence;
 import com.haru.push.mqtt.MqttConnectOptions;
@@ -41,7 +41,6 @@ import java.util.Vector;
  */
 public class ClientComms {
 	public static String 		VERSION = "3.2";
-	public static String 		BUILD_LEVEL = "release";
 
 	private static final byte CONNECTED	= 0;
 	private static final byte CONNECTING	= 1;
@@ -49,7 +48,7 @@ public class ClientComms {
 	private static final byte DISCONNECTED	= 3;
 	private static final byte CLOSED	= 4;
 
-	private IMqttAsyncClient client;
+	private IMqttClient client;
 	private int 					networkModuleIndex;
 	private NetworkModule[]			networkModules;
 	private CommsReceiver 			receiver;
@@ -70,7 +69,7 @@ public class ClientComms {
 	 * Creates a new ClientComms object, using the specified module to handle
 	 * the network calls.
 	 */
-	public ClientComms(IMqttAsyncClient client, MqttClientPersistence persistence, MqttPingSender pingSender) throws MqttException {
+	public ClientComms(IMqttClient client, MqttClientPersistence persistence, MqttPingSender pingSender) throws MqttException {
 		this.conState = DISCONNECTED;
 		this.client 	= client;
 		this.persistence = persistence;
@@ -470,7 +469,7 @@ public class ClientComms {
 		this.clientState.deliveryComplete(msg);
 	}
 
-	public IMqttAsyncClient getClient() {
+	public IMqttClient getClient() {
 		return client;
 	}
 

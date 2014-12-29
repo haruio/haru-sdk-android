@@ -8,7 +8,7 @@ package com.haru.push.mqtt;
  * after failures. There are two approaches
  * <ul> 
  * <li>A list of delivery tokens for in-flight messages can be obtained using 
- * {@link IMqttAsyncClient#getPendingDeliveryTokens()}.  The waitForCompletion
+ * {@link IMqttClient#getPendingDeliveryTokens()}.  The waitForCompletion
  * method can then be used to block until the delivery is complete.
  * <li>A {@link MqttCallback} can be set on the client. Once a message has been 
  * delivered the {@link MqttCallback#deliveryComplete(IMqttDeliveryToken)} method will

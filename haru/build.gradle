@@ -64,10 +64,12 @@ signing {
     sign configurations.archives
 }
 
+def ossrhUsername = hasProperty('OSSRH_USERNAME') ? OSSRH_USERNAME : ""
+def ossrhPassword = hasProperty('OSSRH_PASSWORD') ? OSSRH_PASSWORD : ""
+
 uploadArchives {
     repositories {
         mavenDeployer {
-
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             configuration = configurations.archives

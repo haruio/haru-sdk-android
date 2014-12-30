@@ -30,7 +30,7 @@ public class MqttSuback extends MqttAck {
 	private int[] grantedQos;	
 	
 	public MqttSuback(byte info, byte[] data) throws IOException {
-		super(MqttWireMessage.MESSAGE_TYPE_SUBACK);
+		super(MESSAGE_TYPE_SUBACK);
 		ByteArrayInputStream bais = new ByteArrayInputStream(data);
 		DataInputStream dis = new DataInputStream(bais);
 		msgId = dis.readUnsignedShort();

@@ -44,7 +44,7 @@
         <activity android:label="Push Loss Test"
             android:name="com.haru.test.PushLossTestActivity" />
 
-        <service android:name="com.haru.push.PushService"
+        <service android:name="com.haru.push.push.PushService"
             android:enabled="true"
             android:exported="true" />
 

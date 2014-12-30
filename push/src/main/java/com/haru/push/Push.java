@@ -3,7 +3,6 @@ package com.haru.push;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.haru.Haru;
 import com.haru.HaruRequest;
@@ -15,7 +14,6 @@ import com.haru.task.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 

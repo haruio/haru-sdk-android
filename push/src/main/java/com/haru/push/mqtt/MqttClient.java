@@ -56,7 +56,7 @@ import javax.net.ssl.SSLSocketFactory;
  * messages need to be safely stored until the message has been delivered at the requested
  * quality of service. A pluggable persistence mechanism is provided to store the messages.
  * </p>
- * <p>By default {@link MqttDefaultFilePersistence} is used to store messages to a file.
+ * <p>By default {@link com.haru.push.mqtt.persist.MqttDefaultFilePersistence} is used to store messages to a file.
  * If persistence is set to null then messages are stored in memory and hence can be lost
  * if the client, Java runtime or device shuts down.
  * </p>
@@ -140,7 +140,7 @@ public class MqttClient implements IMqttClient { // DestinationProvider {
 	 *
 	 * <p>In Java ME, the platform settings are used for SSL connections.</p>
 	 *
-	 * <p>An instance of the default persistence mechanism {@link MqttDefaultFilePersistence}
+	 * <p>An instance of the default persistence mechanism {@link com.haru.push.mqtt.persist.MqttDefaultFilePersistence}
 	 * is used by the client. To specify a different persistence mechanism or to turn
 	 * off persistence, use the {@link #MqttClient(String, String, MqttClientPersistence)}
 	 * constructor.

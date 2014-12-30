@@ -163,7 +163,7 @@ public class MqttTopic {
 		// *******************************************************************************
 		if (wildcardAllowed) {
 			// Only # or +
-			if (Strings.equalsAny(topicString, new String[] { MULTI_LEVEL_WILDCARD, SINGLE_LEVEL_WILDCARD })) {
+			if (Strings.equalsAny(topicString, new String[]{MULTI_LEVEL_WILDCARD, SINGLE_LEVEL_WILDCARD})) {
 				return;
 			}
 

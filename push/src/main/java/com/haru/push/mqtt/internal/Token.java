@@ -33,7 +33,7 @@ public class Token {
 	private Object responseLock = new Object();
 	private Object sentLock = new Object();
 	
-	protected MqttMessage message = null; 
+	protected MqttMessage message = null;
 	private MqttWireMessage response = null;
 	private MqttException exception = null;
 	private String[] topics = null;

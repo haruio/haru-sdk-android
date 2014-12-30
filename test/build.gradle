@@ -33,6 +33,7 @@ android {
 
 dependencies {
     compile project(':core')
+    compile project(':push')
     compile project(':haru-ui')
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:+'

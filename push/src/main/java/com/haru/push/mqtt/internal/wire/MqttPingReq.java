@@ -26,11 +26,11 @@ public class MqttPingReq extends MqttWireMessage {
 	public static final String KEY = "Ping";
 
 	public MqttPingReq() {
-		super(MqttWireMessage.MESSAGE_TYPE_PINGREQ);
+		super(MESSAGE_TYPE_PINGREQ);
 	}
 
 	public MqttPingReq(byte info, byte[] variableHeader) throws IOException {
-		super(MqttWireMessage.MESSAGE_TYPE_PINGREQ);
+		super(MESSAGE_TYPE_PINGREQ);
 	}
 	
 	/**

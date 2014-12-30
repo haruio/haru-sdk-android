@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.haru.Config;
 import com.haru.Haru;
-import com.haru.Installation;
 import com.haru.push.Push;
 
 public class App extends Application {

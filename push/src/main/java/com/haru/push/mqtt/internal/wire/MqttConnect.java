@@ -47,7 +47,7 @@ public class MqttConnect extends MqttWireMessage {
 	 * @param info
 	 * @param data
 	 * @throws java.io.IOException
-	 * @throws MqttException
+	 * @throws com.haru.push.mqtt.MqttException
 	 */
 	public MqttConnect(byte info, byte[] data) throws IOException, MqttException {
 		super(MESSAGE_TYPE_CONNECT);

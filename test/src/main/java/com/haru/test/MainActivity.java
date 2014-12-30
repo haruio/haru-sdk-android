@@ -10,7 +10,6 @@ import android.widget.Toast;
 import com.haru.Config;
 import com.haru.HaruFile;
 import com.haru.User;
-import com.haru.helpcenter.HelpCenter;
 import com.haru.push.Push;
 import com.haru.ui.helpcenter.HelpCenterActivity;
 import com.haru.ui.helpcenter.SendQuestionDialogBuilder;

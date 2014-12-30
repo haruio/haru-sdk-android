@@ -452,7 +452,7 @@ public class ClientState {
      * This removes the MqttSend message from the outbound queue and persistence.
      *
      * @param message
-     * @throws MqttPersistenceException
+     * @throws com.haru.push.mqtt.MqttPersistenceException
      */
     protected void undo(MqttPublish message) throws MqttPersistenceException {
         synchronized (queueLock) {

@@ -96,6 +96,7 @@ class LocalEntityStore {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static <T extends Entity> ArrayList<T> retrieve(String className,
                                               String sql,
                                               String[] selectionArgs) {
@@ -130,6 +131,7 @@ class LocalEntityStore {
      * @param className Entity의 className (Collection name)
      * @param entityId Entity의 ID
      */
+    @SuppressWarnings("unchecked")
     static <T extends Entity> T retriveEntity(String className, String entityId) {
 
         return (T) retrieve(className,

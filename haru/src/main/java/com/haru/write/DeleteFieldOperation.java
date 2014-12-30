@@ -1,15 +1,21 @@
 package com.haru.write;
 
-public class DeleteFieldOperation extends Operation<String> {
+import com.haru.Haru;
 
-    String originalValue;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DeleteFieldOperation implements Operation {
+
+    private List<String> fields;
+
     public DeleteFieldOperation(String fieldToDeleted) {
-        super(fieldToDeleted);
-        originalValue = fieldToDeleted;
+        fields = new ArrayList<String>();
+        fields.add(fieldToDeleted);
     }
 
-    public String getOriginalValue() {
-        return originalValue;
+    public String getFirstValue() {
+        return fields.get(0);
     }
 
     @Override
@@ -18,7 +24,19 @@ public class DeleteFieldOperation extends Operation<String> {
     }
 
     @Override
+    public String getRequestDataKey() {
+        return "fields";
+    }
+
+    @Override
     public void mergeFromPrevious(Operation other) {
-        this.objects.addAll(other.objects);
+        if (other instanceof DeleteFieldOperation) {
+            this.fields.addAll(((DeleteFieldOperation) other).fields);
+        }
+    }
+
+    @Override
+    public Object toJson() throws Exception {
+        return Haru.encode(fields);
     }
 }

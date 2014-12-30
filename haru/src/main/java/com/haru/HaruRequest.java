@@ -31,6 +31,7 @@ import org.apache.http.params.HttpParams;
 
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -198,6 +199,14 @@ public class HaruRequest {
 
                 if (response.getStatusLine().getStatusCode() != 200) {
                     throw new RuntimeException(response.getStatusLine().toString());
+                }
+
+                if (body.startsWith("[")) {
+                    // it must be jsonarray
+                    // TODO: Hotfix: Remove it when /batch route is edited
+                    JSONObject json = new JSONObject();
+                    json.put("results", new JSONArray(body));
+                    return new HaruResponse(response, json);
                 }
 
                 return new HaruResponse(response, new JSONObject(body));

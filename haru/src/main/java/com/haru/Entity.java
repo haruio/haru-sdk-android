@@ -85,9 +85,11 @@ public class Entity implements JsonEncodable, Parcelable {
      * ClassName을 통하여 해당 클래스를 찾는다.
      *
      * @param className 클래스 이름 (등록된 이름)
+     * @return 해당 클래스 (못찾을 시 Entity.class 반환)
      */
     protected static <T extends Entity> Class<T> findClassByName(String className) {
-        return (Class<T>) subclassedEntityRepository.get(className);
+        Class clazz = subclassedEntityRepository.get(className);
+        return clazz == null ? Entity.class : clazz;
     }
 
     public static <T extends Entity> T create(Class<T> classObject) {
@@ -121,16 +123,15 @@ public class Entity implements JsonEncodable, Parcelable {
 
         if (className.equals(INHERITED)) {
             isSubclassed = true;
-            className = this.getClass().getCanonicalName();
+            className = Entity.getClassName(this.getClass());
         }
 
+        this.className = className;
         this.entityData = new HashMap();
         this.changedData = new HashMap();
         this.deletedFields = new ArrayList();
         this.operationQueue = new LinkedList<Operation>();
         this.operationSet = new OperationSet(className, entityId);
-
-        this.className = className;
 //      addOperationToQueue(new CreateEntityOperation(this));
     }
 
@@ -520,8 +521,18 @@ public class Entity implements JsonEncodable, Parcelable {
                 copyMap(changedData, entityData);
                 discardChanges();
 
+                // Find updateAt from batch result.
+                String updatedAtFound = null;
+                JSONArray array = response.getJsonBody().getJSONArray("results");
+                for (int i=0; i<array.length(); i++) {
+                    if (array.getJSONObject(i).has("updatedAt")) {
+                        updatedAtFound = getString("updatedAt");
+                        break;
+                    }
+                }
+
                 // Fetch some information
-                updatedAt = parseDate(response.getJsonBody().getString("updateAt"));
+                updatedAt = updatedAtFound != null ? parseDate(updatedAtFound) : updatedAt;
                 entityData.put("updatedAt", updatedAt.getTime());
 
                 if (callback != null) callback.done(null);
@@ -634,7 +645,7 @@ public class Entity implements JsonEncodable, Parcelable {
 
         if (operation instanceof DeleteFieldOperation && operationSet.containsKey("set")) {
             UpdateOperation updateOperations = (UpdateOperation) operationSet.get("set");
-            updateOperations.removeOperationByKey(((DeleteFieldOperation) operation).getOriginalValue());
+            updateOperations.removeOperationByKey(((DeleteFieldOperation) operation).getFirstValue());
 
         }
         if (operationSet.get(method) == null) {
@@ -653,32 +664,22 @@ public class Entity implements JsonEncodable, Parcelable {
      * @param json JSON Packet
      * @return 변환된 Entity
      */
-    static <ENTITY extends Entity> ENTITY fromJson(Class<ENTITY> classObject,
+    @SuppressWarnings("unchecked")
+    static <T extends Entity> T fromJson(Class<T> classObject,
                                                    String className,
                                                    JSONObject json) throws Exception {
-        ENTITY entity = classObject.newInstance();
+        T entity;
+        if (classObject == Entity.class) {
+            entity = (T) new Entity(className);
+        } else entity = classObject.newInstance();
+
         entity.className = className;
+        entity.setEntityId(json.getString("_id"));
         entity.entityData = Haru.convertJsonToMap(json);
-        entity.entityId = json.getString("_id");
         entity.createdAt = parseDate(json.getString("createdAt"));
         entity.updatedAt = parseDate(json.getString("updatedAt"));
         return entity;
     }
-
-    /**
-     * JSON을 Entity로 변환한다.
-     * @param json JSON Packet
-     * @return 변환된 Entity
-     */
-    static <T extends Entity> T fromJson(Class<T> classObject, JSONObject json) throws Exception {
-        T entity = classObject.newInstance();
-        entity.entityData = Haru.convertJsonToMap(json);
-        entity.entityId = json.getString("_id");
-        entity.createdAt = parseDate(json.getString("createdAt"));
-        entity.updatedAt = parseDate(json.getString("updatedAt"));
-        return entity;
-    }
-
 
     /**
      * JSON을 Entity로 변환한다.
@@ -686,15 +687,19 @@ public class Entity implements JsonEncodable, Parcelable {
      * @param entityId 해당 엔티티의 ID
      * @return 변환된 Entity
      */
+    @SuppressWarnings("unchecked")
     static <T extends Entity> T fromJsonToSubclass(Class<T> classObject,
                                                    String className,
                                                    String entityId,
                                                    JSONObject json) throws Exception {
-        T entity = classObject.newInstance();
-        entity.entityData = Haru.convertJsonToMap(json);
+        T entity;
+        if (classObject == Entity.class) {
+            entity = (T) new Entity(className);
+        } else entity = classObject.newInstance();
+
         entity.className = className;
-        entity.entityId = entityId;
-        entity.operationSet = new OperationSet(className, entityId);
+        entity.setEntityId(entityId);
+        entity.entityData = Haru.convertJsonToMap(json);
         entity.createdAt = parseDate(json.getString("createdAt"));
         entity.updatedAt = parseDate(json.getString("updatedAt"));
         return entity;

@@ -1,15 +1,17 @@
 package com.haru.write;
 
-import java.util.Iterator;
+import com.haru.Haru;
 
-public class UpdateOperation extends Operation<KeyValuePair> {
+import java.util.HashMap;
+import java.util.Map;
 
-    public UpdateOperation(KeyValuePair keyValuePair) {
-        super(keyValuePair);
-    }
+public class UpdateOperation implements Operation {
+
+    Map<String, Object> data;
 
     public UpdateOperation(String key, Object value) {
-        this(new KeyValuePair(key, value));
+        data = new HashMap<String, Object>();
+        data.put(key, value);
     }
 
     @Override
@@ -18,18 +20,23 @@ public class UpdateOperation extends Operation<KeyValuePair> {
     }
 
     @Override
+    public String getRequestDataKey() {
+        return "entity";
+    }
+
+    @Override
     public void mergeFromPrevious(Operation other) {
-        this.objects.addAll(other.objects);
+        if (other instanceof UpdateOperation) {
+            this.data.putAll(((UpdateOperation) other).data);
+        }
     }
 
     public void removeOperationByKey(String key) {
-        Iterator<KeyValuePair> iter = objects.iterator();
-        while (iter.hasNext()) {
-            KeyValuePair obj = iter.next();
-            if (obj.getKey().equals(key)) {
-                iter.remove();
-                return;
-            }
-        }
+        data.remove(key);
+    }
+
+    @Override
+    public Object toJson() throws Exception {
+        return Haru.encode(data);
     }
 }

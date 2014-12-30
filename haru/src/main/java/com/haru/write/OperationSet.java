@@ -24,11 +24,13 @@ public class OperationSet extends HashMap<String, Operation> implements JsonEnco
         Iterator<Map.Entry<String, Operation>> iter = this.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<String, Operation> pair = iter.next();
+            Operation operation = pair.getValue();
+
             JSONObject json = new JSONObject();
-            json.put("method", pair.getKey());
+            json.put("method", operation.getMethod());
             json.put("class", className);
             json.put("_id", entityId);
-            json.put("entity", Haru.encode(pair.getValue()));
+            json.put(operation.getRequestDataKey(), Haru.encode(operation));
             jsonArray.put(json);
         }
         return jsonArray;

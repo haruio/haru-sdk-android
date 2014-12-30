@@ -1,17 +1,17 @@
 apply plugin: 'com.android.library'
 
 dependencies {
-    compile project(':facebook')
-    compile project(':kakao')
+    compile "com.facebook.android:facebook-android-sdk:${FACEBOOK_SDK_VERSION}"
+    compile "com.kakao.sdk:usermgmt:${KAKAO_SDK_VERSION}"
+    compile "com.kakao.sdk:login:${KAKAO_SDK_VERSION}"
 }
-
 
 android {
     compileSdkVersion 18
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        minSdkVersion 9
+        minSdkVersion 10
         targetSdkVersion 18
         versionCode 1
         versionName "1.0"
@@ -35,6 +35,9 @@ android {
         }
     }
 }
+
+// will create javadocs
+apply from: "$rootProject.projectDir/scripts/create_docs.gradle"
 
 // will upload this module to MVN
 apply from: "$rootProject.projectDir/scripts/upload.gradle"

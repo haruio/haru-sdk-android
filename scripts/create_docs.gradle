@@ -1,0 +1,66 @@
+/**
+ * To Generate Javadoc from Android Library Module.
+ */
+
+def getAndroidLibraryVariant(variantName) {
+    project.collect { project ->
+        project.android.libraryVariants.findAll { type ->
+            type.buildType.name.equalsIgnoreCase(variantName)
+        }
+    }.sum()
+}
+
+def getSourceFilesForVariant(variantName) {
+    getAndroidLibraryVariant(variantName).collect { it.javaCompile.source }
+}
+
+def getAndroidJar() {
+    "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+}
+
+def getExcludedList() {
+    hasProperty('EXCLUDED_FROM_DOCS') ? EXCLUDED_FROM_DOCS.split(", ") : []
+}
+
+// Generate javadocs and sources.
+afterEvaluate { project ->
+    android.libraryVariants.all { variant ->
+        def variantName = variant.name
+
+        task("${variantName}SourceJar", type: Jar) {
+            from getSourceFilesForVariant(variantName)
+        }
+
+        def javadocTask = task("${variantName}Javadoc", type: Javadoc) {
+            source = variant.javaCompile.source
+            classpath = files(variant.javaCompile.classpath.files, getAndroidJar())
+            exclude getExcludedList().collect { "**/com/haru/${it}" }
+
+            options {
+                links("http://docs.oracle.com/javase/7/docs/api/")
+                linksOffline("http://d.android.com/reference", "${android.sdkDirectory}/docs/reference")
+            }
+            options.charSet = 'UTF-8'
+            title 'Plugy Android SDK'
+        }
+
+        def cleanJavadocTask = task("clean${variantName.capitalize()}Javadoc", type: Delete) {
+            delete javadocTask.destinationDir
+        }
+        clean.dependsOn(cleanJavadocTask)
+
+        def javadocJarTask = task("${variantName}JavadocJar", type: Jar) {
+            from javadocTask.destinationDir
+        }
+        javadocJarTask.dependsOn(javadocTask)
+    }
+
+    artifacts {
+        archives releaseJavadocJar {
+            classifier 'javadoc'
+        }
+        archives releaseSourceJar {
+            classifier 'sources'
+        }
+    }
+}

@@ -6,13 +6,14 @@ android {
 
     defaultConfig {
         applicationId "com.haru.test"
-        minSdkVersion 9
+        minSdkVersion 10
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 
     lintOptions {

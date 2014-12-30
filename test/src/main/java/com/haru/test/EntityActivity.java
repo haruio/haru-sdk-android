@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -39,7 +40,8 @@ public class EntityActivity extends ActionBarActivity {
         ListView listView = (ListView) findViewById(R.id.entity_list);
 
         // PageAdapter 초기화
-        adapter = new PagedEntityAdapter(this, CLASS_NAME, R.layout.elem);
+        adapter = new PagedEntityAdapter(this, Entity.where(CLASS_NAME)
+                , R.layout.elem);
         adapter.setOnViewRenderListener(new PagedEntityAdapter.OnViewRenderListener() {
             @Override
             public void onViewRender(int index, Entity entity, View view) {
@@ -111,15 +113,47 @@ public class EntityActivity extends ActionBarActivity {
         final ArrayAdapter<String> menuAdapter = new ArrayAdapter<String>(
                 EntityActivity.this,
                 android.R.layout.simple_list_item_1,
-                new String[]{"Make offline", "Delete entity"}
+                new String[]{"Make offline", "Edit Entity", "Delete entity"}
         );
 
-        AlertDialog dialog = new AlertDialog.Builder(EntityActivity.this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setAdapter(menuAdapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if (i == 0) {
                             entity.saveToLocal();
+                        }
+                        // 수정
+                        else if (i == 1) {
+                            final EditText text = new EditText(EntityActivity.this);
+                            text.setText(entity.getString("content"));
+                            text.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT));
+
+                            AlertDialog dialog = new AlertDialog.Builder(EntityActivity.this)
+                                    .setTitle("Edit Entity")
+                                    .setView(text)
+                                    .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            entity.put("content", text.getText().toString());
+                                            entity.saveInBackground(new SaveCallback() {
+                                                @Override
+                                                public void done(HaruException error) {
+                                                    if (error != null) {
+                                                        error.printStackTrace();
+                                                        toast(error.getMessage());
+
+                                                    } else {
+                                                        adapter.refreshInBackground();
+                                                        toast("Saved!");
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    })
+                                    .create();
+                            dialog.show();
                         }
                         // 삭제
                         else entity.deleteInBackground(new DeleteCallback() {
@@ -129,7 +163,7 @@ public class EntityActivity extends ActionBarActivity {
                                     exception.printStackTrace();
                                     toast(exception.getMessage());
                                 }
-                                adapter.notifyDataSetChanged();
+                                adapter.refreshInBackground();
                                 toast("Deleted.");
                             }
                         });

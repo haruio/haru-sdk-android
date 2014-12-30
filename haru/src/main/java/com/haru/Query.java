@@ -23,6 +23,9 @@ public class Query {
     private JSONObject mainQueryObject;
     private JSONObject currentScope;
 
+    private int countPerPage = -1, pageIndex = -1;
+    private String sortOption = "";
+
     private Query(Class<? extends Entity> subclassedClass) {
         this.className = Entity.getClassName(subclassedClass);
         this.classObject = subclassedClass;
@@ -255,12 +258,58 @@ public class Query {
     }
 
     /**
+     * 결과를 한번에 받아오는 것이 아닌, 페이지로 나누어 받아온다 (Pagination).
+     * @param resultCountPerPage 페이지당 항목의 갯수
+     * @param pageIndex 가져오길 원하는 페이지 인덱스 (ex: pageCount가 10으로 설정시 index 3 = 40~50번대 결과)
+     */
+    public Query paginate(int resultCountPerPage, int pageIndex) {
+        if (resultCountPerPage <= 0) {
+            throw new IllegalArgumentException("resultCountPerPage must be greater than 0!");
+
+        } else if (pageIndex < 0) {
+            throw new IllegalArgumentException("pageIndex must be positive number!");
+        }
+
+        this.countPerPage = resultCountPerPage;
+        this.pageIndex = pageIndex;
+        return this;
+    }
+
+    /**
+     * 주어진 필드를 기준으로 오름차순 정렬한다.
+     * @param fieldName 필드
+     */
+    public Query sortAscending(String fieldName) {
+        this.sortOption += fieldName + ",";
+        return this;
+    }
+
+    /**
+     * 주어진 필드를 기준으로 내림차순 정렬한다.
+     * @param fieldName 필드
+     */
+    public Query sortDescending(String fieldName) {
+        this.sortOption += "-" + fieldName + ",";
+        return this;
+    }
+
+    /**
      * 쿼리를 수행한 결과(Entity)의 목록을 받는다.
      * @param callback {@link com.haru.callback.FindCallback}
      */
     public void findAll(final FindCallback callback) {
         Param param = new Param();
         param.put("where", mainQueryObject.toString());
+        if (sortOption.length() != 0)
+            param.put("sort", sortOption.substring(0, sortOption.length()-1));
+
+        if (countPerPage != -1 && pageIndex != -1) {
+            Param sortParam = new Param();
+            sortParam.put("pageSize", countPerPage);
+            sortParam.put("pageNumber", pageIndex + 1);
+            param.put("page", sortParam);
+        }
+
         Task<HaruResponse> findTask = new HaruRequest("/classes/" + className)
                 .get(param)
                 .executeAsync();
@@ -303,7 +352,7 @@ public class Query {
      */
     public void findOne(final GetCallback callback) {
         Param param = new Param();
-        param.put("where", mainQueryObject.toString());
+        param.put("where", mainQueryObject);
         Task<HaruResponse> findTask = new HaruRequest("/classes/" + className)
                 .get(param)
                 .executeAsync();

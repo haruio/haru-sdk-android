@@ -1,3 +1,2 @@
+include ':core', ':test', ':facebook', ':kakao', ':haru-ui'
 rootProject.name = 'haru-core'
-
-include ':haru', ':test', ':facebook', ':kakao', ':haru-ui'

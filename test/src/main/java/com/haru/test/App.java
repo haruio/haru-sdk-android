@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.haru.Config;
 import com.haru.Haru;
+import com.haru.Installation;
 import com.haru.push.Push;
 
 public class App extends Application {
@@ -17,8 +18,10 @@ public class App extends Application {
         super.onCreate();
         Log.e("Haru", "===========================================================================");
         Haru.init(this, APP_KEY, SDK_KEY);
-        Push.subscribe("testChannel");
         Push.init(this);
+
+        Push.subscribe("testChannel");
+
         Config.loadInBackground();
     }
 }

@@ -1,8 +1,11 @@
 package com.haru.test;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -13,9 +16,20 @@ import com.haru.push.PushReceiver;
  *
  */
 public class TestPushReceiver extends PushReceiver {
+
+    private static int NOTI_ID = 1000;
+
     @Override
     public Notification onNotification(Context context, Push push) {
-        return super.onNotification(context, push);
+        return new NotificationCompat.Builder(context)
+                .setTicker(push.getMessage())
+                .setContentTitle(push.getTitle())
+                .setContentText(push.getMessage())
+                .setContentIntent(PendingIntent.getActivity(context, 0,
+                        new Intent(context, MainActivity.class),
+                        PendingIntent.FLAG_UPDATE_CURRENT))
+                .setSmallIcon(R.drawable.ic_launcher)
+                .build();
     }
 
     @Override

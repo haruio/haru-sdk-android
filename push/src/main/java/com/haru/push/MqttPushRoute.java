@@ -27,8 +27,8 @@ class MqttPushRoute implements MqttCallback {
     private static final String TAG = "HaruMQTT";
 
     // fields for the connection definition
-    private static final String SERVER_URI = "tcp://push.haru.io:80";
-    private String clientId = "Haru Push";
+    private static String serverUri = "tcp://push.haru.io:80";
+    private String clientId = "Android SDK " + Haru.getSdkVersion();
 
     private MqttClientPersistence persistence = null;
 
@@ -50,6 +50,10 @@ class MqttPushRoute implements MqttCallback {
         this.context = context;
         this.options = new MqttConnectOptions();
         options.setCleanSession(false); // to get retained messages
+    }
+
+    static void setHostUrl(String hostUrl) {
+        MqttPushRoute.serverUri = hostUrl;
     }
 
     /**
@@ -102,7 +106,7 @@ class MqttPushRoute implements MqttCallback {
 
             // if myClient is null, then create a new connection
             else {
-                myClient = new MqttClient(SERVER_URI, clientId, persistence,
+                myClient = new MqttClient(serverUri, clientId, persistence,
                         new AlarmPingSender(context));
                 myClient.setCallback(this);
 

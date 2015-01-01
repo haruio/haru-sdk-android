@@ -32,10 +32,20 @@ public class Push implements Parcelable {
     private String query;
 
     /**
-     * Push를 사용한다.
+     * Plugy Push를 사용한다.
      * @param context Application Context
      */
     public static void init(Context context) {
+        PushService.startIfRequired(context);
+    }
+
+    /**
+     * Plugy Push를 사용한다.
+     * @param context Application Context
+     * @param serverHostUrl Push Server Host URL - If you built your own Plugy Push Server.
+     */
+    public static void init(Context context, String serverHostUrl) {
+        MqttPushRoute.setHostUrl(serverHostUrl);
         PushService.startIfRequired(context);
     }
 

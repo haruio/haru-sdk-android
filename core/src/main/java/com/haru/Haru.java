@@ -19,7 +19,7 @@ import java.util.*;
  */
 public class Haru {
 
-    private static final String SDK_VERSION_NAME = "0.1.0-alpha";
+    private static final String SDK_VERSION_NAME = "0.2.0-beta";
     private static final boolean IS_DEBUG_BUILD = true;
 
     private static final String TAG = "Plugy";

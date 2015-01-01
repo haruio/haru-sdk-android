@@ -4,7 +4,6 @@ import com.haru.HaruException;
 import com.haru.helpcenter.Notice;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 공지사항 목록을 가져오기 위한 콜백이다.

@@ -1,14 +1,10 @@
 package com.haru.test;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.haru.HaruException;
@@ -19,7 +15,6 @@ import com.haru.helpcenter.callback.GetCategoryCallback;
 import com.haru.helpcenter.callback.GetFAQCallback;
 import com.haru.helpcenter.callback.GetNoticeCallback;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 

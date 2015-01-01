@@ -44,7 +44,7 @@ public final class Installation extends Entity {
      * Installation을 초기화하고, 현재 설치 정보를 구해온다.
      * @param appContext Application Context {@link android.app.Application}
      */
-    static void init(Context appContext) {
+    public static void init(Context appContext) {
         context = appContext;
 
         // check already have installation in local
@@ -54,7 +54,7 @@ public final class Installation extends Entity {
         if (entities == null || entities.size() == 0) {
             // this is the first time.
             currentInstallation = new Installation();
-            Log.i("Haru", "Making a new installation...");
+            Haru.logI("Making a new installation...");
 
             // update and save
             currentInstallation.fillInformation();
@@ -75,7 +75,7 @@ public final class Installation extends Entity {
         } else {
             // use the old one.
             currentInstallation = entities.get(0);
-            Log.i("Haru", "Installation already exists! id=" + currentInstallation.entityId);
+            Haru.logI("Installation already exists (%s)", currentInstallation.entityId);
 
             // update and save
 //          currentInstallation.fillInformation();

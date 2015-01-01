@@ -22,7 +22,7 @@ public class Haru {
     private static final String SDK_VERSION_NAME = "0.1.0-alpha";
     private static final boolean IS_DEBUG_BUILD = true;
 
-    private static final String TAG = "Haru";
+    private static final String TAG = "Plugy";
 
     private static String mAppKey;
     private static String mSdkKey;
@@ -52,7 +52,6 @@ public class Haru {
 
         HaruRequest.initialize(context);
         useOfflineDataStoring(context);
-        Installation.init(context);
         Config.init(context);
     }
 

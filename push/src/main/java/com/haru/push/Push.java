@@ -226,7 +226,7 @@ public class Push implements Parcelable {
     public void writeToParcel(Parcel out, int i) {
         out.writeStringList(channels);
         out.writeString(data.toJson().toString());
-        out.writeString(userQuery.toString());
+//      out.writeString(userQuery.toString());
     }
 
 

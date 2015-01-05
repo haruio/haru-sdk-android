@@ -17,9 +17,10 @@ import com.haru.push.PushReceiver;
 public class TestPushReceiver extends PushReceiver {
 
     private static int NOTI_ID = 1000;
-
+/*
     @Override
     public Notification onNotification(Context context, Push push) {
+        Log.d("HaruTest", "Noti Received  " + push.getMessage());
         return new NotificationCompat.Builder(context)
                 .setTicker(push.getMessage())
                 .setContentTitle(push.getTitle())
@@ -30,10 +31,10 @@ public class TestPushReceiver extends PushReceiver {
                 .setSmallIcon(R.drawable.ic_launcher)
                 .build();
     }
-
+*/
     @Override
     public void onMessage(Context context, Push push) {
-        Log.i("HaruTest", "Push Received => " + push.getMessage());
+        Log.i("HaruTest", "Message Received => " + push.getMessage());
         if (push.getMessage().equals("lossTest")) return;
         Toast.makeText(context, push.getMessage(), Toast.LENGTH_SHORT).show();
     }

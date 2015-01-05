@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.util.Log;
 
 import com.haru.Haru;
 
@@ -65,6 +66,7 @@ public class PushReceiver extends BroadcastReceiver {
                         (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                 Notification noti = onNotification(context, push);
                 nm.notify(NOTI_ID.incrementAndGet(), noti);
+                Log.e("HaruTest", "NOTI ID : " + NOTI_ID.get());
         }
     }
 

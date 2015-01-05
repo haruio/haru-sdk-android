@@ -28,7 +28,8 @@ class MqttPushRoute implements MqttCallback {
 
     // fields for the connection definition
     private static String serverUri = "tcp://push.haru.io:80";
-    private String clientId = "Android SDK " + Haru.getSdkVersion();
+    private String clientId = "Android SDK " + Haru.getSdkVersion()
+            + " " + Installation.getCurrentInstallation().get("deviceToken");
 
     private MqttClientPersistence persistence = null;
 
@@ -128,8 +129,8 @@ class MqttPushRoute implements MqttCallback {
 
         // subscribe to topic (appKey:installationId), QoS 2
         Installation installation = Installation.getCurrentInstallation();
-        subscribe(Haru.getAppKey() + ":" + installation.getString("deviceToken"), 2);
-        Haru.logD("The topic is %s:%s", Haru.getAppKey(), installation.getString("deviceToken"));
+        subscribe(Haru.getAppKey() + "/" + installation.getString("deviceToken"), 2);
+        Haru.logD("The topic is %s/%s", Haru.getAppKey(), installation.getString("deviceToken"));
 
         releaseWakeLock();
     }
@@ -203,7 +204,7 @@ class MqttPushRoute implements MqttCallback {
      */
     @Override
     public void connectionLost(Throwable why) {
-        Haru.logD("Push: connectionLost(%s)", why.getCause().getMessage());
+        Haru.logD("Push: connectionLost(%s)", why.getCause().getCause().getMessage());
 
         disconnected = true;
         try {

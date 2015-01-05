@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PushReceiver extends BroadcastReceiver {
 
-    private final static AtomicInteger NOTI_ID = new AtomicInteger(0);
+    private final static AtomicInteger NOTI_ID = new AtomicInteger(1000);
 
     /**
      * Push 관련 Broadcast를 받을 시 호출된다. <b>절대로 Override되어선 안된다.</b>
@@ -65,8 +65,7 @@ public class PushReceiver extends BroadcastReceiver {
                 NotificationManager nm =
                         (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                 Notification noti = onNotification(context, push);
-                nm.notify(NOTI_ID.incrementAndGet(), noti);
-                Log.e("HaruTest", "NOTI ID : " + NOTI_ID.get());
+                nm.notify(NOTI_ID.get(), noti);
         }
     }
 

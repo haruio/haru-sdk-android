@@ -3,6 +3,8 @@ package com.haru.push;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
@@ -21,6 +23,8 @@ import com.haru.push.mqtt.MqttMessage;
 import com.haru.push.mqtt.persist.MqttDefaultFilePersistence;
 
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 
 class MqttPushRoute implements MqttCallback {
 
@@ -38,6 +42,7 @@ class MqttPushRoute implements MqttCallback {
     private MqttConnectOptions options;
 
     private Context context;
+    private boolean isNetworkConnected = true;
 
     private volatile boolean disconnected = true;
 
@@ -46,6 +51,7 @@ class MqttPushRoute implements MqttCallback {
     private volatile boolean isConnecting = false;
 
     private WakeLock wakelock = null;
+    private Timer reconnectTimer;
 
     MqttPushRoute(Context context) {
         this.context = context;
@@ -127,6 +133,11 @@ class MqttPushRoute implements MqttCallback {
         setConnectingState(false);
         disconnected = false;
 
+        if (reconnectTimer != null) {
+            reconnectTimer.cancel();
+            reconnectTimer = null;
+        }
+
         // subscribe to topic (appKey:installationId), QoS 2
         Installation installation = Installation.getCurrentInstallation();
         subscribe(Haru.getAppKey() + "/" + installation.getString("deviceToken"), 2);
@@ -199,12 +210,19 @@ class MqttPushRoute implements MqttCallback {
     }
 
     /**
+     * Called when network state is changed. (called by service)
+     */
+    public void onNetworkStateChanged(boolean isNetworkConnected) {
+        this.isNetworkConnected = isNetworkConnected;
+    }
+
+    /**
      * Callback for connectionLost
      * @param why the exeception causing the break in communications
      */
     @Override
     public void connectionLost(Throwable why) {
-        Haru.logD("Push: connectionLost(%s)", why.getCause().getCause().getMessage());
+        Haru.logD("Push: connectionLost(%s)", why.getCause().getMessage());
 
         disconnected = true;
         try {
@@ -212,6 +230,17 @@ class MqttPushRoute implements MqttCallback {
         } catch (Exception e) {
             // ignore it - we've done our best
         }
+
+        reconnectTimer = new Timer();
+        reconnectTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (isNetworkConnected) {
+                    Haru.logD("Push: Try to reconnect per 1 minutes.");
+                    reconnect();
+                }
+            }
+        }, 60000); // Reconnect per 2 minutes
 
         // client has lost connection no need for wake lock
         releaseWakeLock();

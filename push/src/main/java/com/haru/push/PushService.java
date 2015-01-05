@@ -148,6 +148,8 @@ public class PushService extends Service {
             PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MQTT");
             wl.acquire();
 
+            mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
+
             if (isNetworkOnline()) {
                 // we have an internet connection - have another try at
                 // connecting
@@ -173,10 +175,12 @@ public class PushService extends Service {
                 if (!backgroundDataEnabled) {
                     // we have the Internet connection - have another try at reconnecting.
                     backgroundDataEnabled = true;
+                    mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
                     mqttPushRoute.reconnect();
                 }
             } else {
                 backgroundDataEnabled = false;
+                mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
                 mqttPushRoute.offline();
             }
         }

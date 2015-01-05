@@ -14,12 +14,12 @@ import org.json.JSONObject;
 import java.util.*;
 
 /**
- * Haru Android SDK를 초기화하는 역할이자,
+ * Plugy Android SDK를 초기화하는 역할이자,
  * 각종 함수들을 모아놓은 Utility Class의 역할을 한다.
  */
 public class Haru {
 
-    private static final String SDK_VERSION_NAME = "0.2.0-beta";
+    private static final String SDK_VERSION_NAME = "0.2.1-beta";
     private static final boolean IS_DEBUG_BUILD = true;
 
     private static final String TAG = "Plugy";
@@ -37,6 +37,19 @@ public class Haru {
      * @param sdkKey SDK Key - Haru 대시보드 > 설정에서 확인
      */
     public static void init(Context context, String appKey, String sdkKey) {
+        Haru.init(context, appKey, sdkKey, null);
+    }
+
+    /**
+     * Plugy Android SDK를 초기화한다.
+     * 앱이 초기화될 시점에 호출되어야만 한다.
+     *
+     * @param context Application Context
+     * @param appKey Application Key - Plugy.io 대시보드 > 설정에서 확인
+     * @param sdkKey SDK Key - Plugy.io 대시보드 > 설정에서 확인
+     * @param endpointUrl Plugy를 별도 설치한 경우, 설치된 서버의 Endpoint URL
+     */
+    public static void init(Context context, String appKey, String sdkKey, String endpointUrl) {
         if (context == null) {
             throw new IllegalArgumentException("A context must be given.");
         }
@@ -50,7 +63,9 @@ public class Haru {
         Entity.registerSubclass(Installation.class);
         Entity.registerSubclass(User.class);
 
-        HaruRequest.initialize(context);
+        if (endpointUrl != null) HaruRequest.initialize(context, endpointUrl);
+        else HaruRequest.initialize(context);
+
         useOfflineDataStoring(context);
         Config.init(context);
     }
@@ -75,7 +90,7 @@ public class Haru {
     }
 
     /**
-     * Encodable 객체들을 JSON 포맷으로 인코딩한다.
+     * JsonEncodable 객체들을 JSON 포맷으로 인코딩한다.
      * @param object 인코딩할 객체 (Encodable, Array)
      * @return 인코딩된 JSON (JSONObject or JSONArray)
      */

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.haru.Haru;
 import com.haru.HaruRequest;
 import com.haru.Installation;
 import com.haru.Param;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 서버로부터 전송된 Push 데이터를 표현하는 클래스이자, <br/>
+ * 서버로부터 전송된 Push 데이터를 표현하는 클래스이자, <br>
  * 서버로 푸시를 보내기 위한 유틸리티 클래스이다.
  */
 public class Push implements Parcelable {
@@ -27,26 +26,34 @@ public class Push implements Parcelable {
     public static final int TYPE_NOTIFICATION = 1;
     public static final String INTENT_EXTRA = "intent.extra.push";
 
+    private static boolean initialized = false;
+
     private ArrayList<String> channels;
     private Param data;
-    private String query;
+    private Query userQuery;
+    private Query installationQuery;
 
     /**
-     * Plugy Push를 사용한다.
+     * Plugy Push 기능을 사용한다.
      * @param context Application Context
      */
     public static void init(Context context) {
+        if (!Installation.isInitialized()) {
+            // Installation feature should be turned on.
+            throw new IllegalStateException("You must call Installation.init() before using Push!");
+        }
         PushService.startIfRequired(context);
+        initialized = true;
     }
 
     /**
-     * Plugy Push를 사용한다.
+     * Plugy Push 기능을 사용한다.
      * @param context Application Context
      * @param serverHostUrl Push Server Host URL - If you built your own Plugy Push Server.
      */
     public static void init(Context context, String serverHostUrl) {
         MqttPushRoute.setHostUrl(serverHostUrl);
-        PushService.startIfRequired(context);
+        init(context);
     }
 
     /**
@@ -56,8 +63,7 @@ public class Push implements Parcelable {
     public static class MessageBuilder {
         private ArrayList<String> channels;
         private Param data;
-        private String message;
-        private String query;
+        private Query query;
 
         public MessageBuilder() {
             data = new Param();
@@ -71,7 +77,7 @@ public class Push implements Parcelable {
             return this;
         }
 
-        public MessageBuilder setQuery(String query) {
+        public MessageBuilder setQueryToUsers(Query query) {
             this.query = query;
             return this;
         }
@@ -96,7 +102,7 @@ public class Push implements Parcelable {
             Push push = new Push();
             push.channels = channels;
             push.data = data;
-            push.query = query;
+            push.userQuery = query;
             return push;
         }
     }
@@ -108,7 +114,7 @@ public class Push implements Parcelable {
     public static class NotificationBuilder {
         private ArrayList<String> channels;
         private Param data;
-        private String query;
+        private Query query;
 
         public NotificationBuilder() {
             data = new Param();
@@ -127,7 +133,7 @@ public class Push implements Parcelable {
             return this;
         }
 
-        public NotificationBuilder setQuery(String query) {
+        public NotificationBuilder setQueryToUsers(Query query) {
             this.query = query;
             return this;
         }
@@ -152,7 +158,7 @@ public class Push implements Parcelable {
             Push push = new Push();
             push.channels = channels;
             push.data = data;
-            push.query = query;
+            push.userQuery = query;
             return push;
         }
     }
@@ -196,7 +202,6 @@ public class Push implements Parcelable {
         try {
             in.readStringList(channels);
             data = Param.fromJson(new JSONObject(in.readString()));
-            query = in.readString();
 
         } catch (JSONException e) {
             throw new RuntimeException("Parcel failed : Malformed JSON", e);
@@ -221,7 +226,7 @@ public class Push implements Parcelable {
     public void writeToParcel(Parcel out, int i) {
         out.writeStringList(channels);
         out.writeString(data.toJson().toString());
-        out.writeString(query);
+        out.writeString(userQuery.toString());
     }
 
 
@@ -254,20 +259,44 @@ public class Push implements Parcelable {
         return (String) data.get("message");
     }
 
-    public String getQuery() {
-        return query;
+    public String getStringExtra(String key) {
+        return (String) data.get(key);
+    }
+
+    public int getIntExtra(String key) {
+        return (Integer) data.get(key);
+    }
+
+    public long getLongExtra(String key) {
+        return (Long) data.get(key);
+    }
+
+    public double getDoubleExtra(String key) {
+        return (Double) data.get(key);
+    }
+
+    public Object getExtra(String key) {
+        return data.get(key);
+    }
+
+    public Query getUserQuery() {
+        return userQuery;
     }
 
     /**
      * Push 메세지를 발송한다.
      */
     public void sendInBackground() {
+        if (!initialized) {
+            throw new IllegalStateException("You must call Push.init() before sending push!");
+        }
+
         Param params = new Param();
-        if (query != null) params.put("users", query); // TODO: Fix
+        if (userQuery != null) params.put("users", userQuery.toJson()); // TODO: Fix
         if (channels != null) {
             params.put("installations", Query.where("Installations")
                     .containedIn("channels", channels)
-                    .getJson());
+                    .toJson());
         }
 
         params.put("notification", data);

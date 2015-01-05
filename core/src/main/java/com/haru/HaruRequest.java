@@ -42,7 +42,7 @@ import java.util.concurrent.Callable;
  */
 public class HaruRequest {
 
-    private static final String HARU_ENDPOINT = "http://api.plugy.io/1";
+    private static String PLUGY_ENDPOINT = "http://api.plugy.io/1";
 
     private static final String USER_AGENT =
             "Haru SDK " + Haru.getSdkVersion() + " / Android " + Build.VERSION.RELEASE;
@@ -70,6 +70,16 @@ public class HaruRequest {
 
         appKey = Haru.getAppKey();
         sdkKey = Haru.getSdkKey();
+    }
+
+    /**
+     * HaruRequest를 초기화시킨다.
+     * @param context Application Context {@link android.content.Context}
+     * @param endpoint Plugy를 별도 설치한 경우, 설치된 서버의 Endpoint URL
+     */
+    static void initialize(Context context, String endpoint) {
+        PLUGY_ENDPOINT = endpoint;
+        initialize(context);
     }
 
     /**
@@ -110,7 +120,7 @@ public class HaruRequest {
     public HaruRequest(String url) {
         this();
         if (url.startsWith("http")) endpoint = url;
-        else endpoint = Haru.urlJoin(HARU_ENDPOINT, url);
+        else endpoint = Haru.urlJoin(PLUGY_ENDPOINT, url);
     }
 
     /**

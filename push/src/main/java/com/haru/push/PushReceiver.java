@@ -10,6 +10,8 @@ import android.graphics.Color;
 
 import com.haru.Haru;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Push를 수신받는 리시버이다.<br/>
  * 이 리시버와 {@link #onMessage(android.content.Context, Push)},
@@ -19,6 +21,8 @@ import com.haru.Haru;
  * <b>푸시를 받기 위해서는 PushReceiver 혹은 상속받은 리시버가 반드시 AndroidManifest.xml에 등록되어야만 한다!</b>
  */
 public class PushReceiver extends BroadcastReceiver {
+
+    private final static AtomicInteger NOTI_ID = new AtomicInteger(0);
 
     /**
      * Push 관련 Broadcast를 받을 시 호출된다. <b>절대로 Override되어선 안된다.</b>
@@ -60,7 +64,7 @@ public class PushReceiver extends BroadcastReceiver {
                 NotificationManager nm =
                         (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                 Notification noti = onNotification(context, push);
-                nm.notify(3, noti);
+                nm.notify(NOTI_ID.incrementAndGet(), noti);
         }
     }
 

@@ -29,6 +29,8 @@ public final class Installation extends Entity {
     public static final String CLASS_NAME = "Installations";
     private static final String CURRENT_INSTALLATION_TAG = "__currentInstallation";
 
+    private static boolean initialized = false;
+
     private static String mUUID;
     private static Context context;
     private static Installation currentInstallation;
@@ -41,7 +43,7 @@ public final class Installation extends Entity {
     }
 
     /**
-     * Installation을 초기화하고, 현재 설치 정보를 구해온다.
+     * Installation 기능을 사용하고, 현재 앱 설치 정보를 서버에 전송한다.
      * @param appContext Application Context {@link android.app.Application}
      */
     public static void init(Context appContext) {
@@ -81,6 +83,11 @@ public final class Installation extends Entity {
 //          currentInstallation.fillInformation();
 //          currentInstallation.saveInBackground();
         }
+        initialized = true;
+    }
+
+    public static boolean isInitialized() {
+        return initialized;
     }
 
     void fillInformation() {

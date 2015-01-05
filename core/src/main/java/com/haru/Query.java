@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -94,7 +95,7 @@ public class Query {
     public Query notEqualTo(String field, String value) {
         try {
             JSONObject neClause = new JSONObject();
-             neClause.put("$ne", value);
+            neClause.put("$ne", value);
             currentScope.put(field, neClause);
         } catch (JSONException e) {
             throw new RuntimeException("Query build error", e);
@@ -259,8 +260,9 @@ public class Query {
 
     /**
      * 결과를 한번에 받아오는 것이 아닌, 페이지로 나누어 받아온다 (Pagination).
+     *
      * @param resultCountPerPage 페이지당 항목의 갯수
-     * @param pageIndex 가져오길 원하는 페이지 인덱스 (ex: pageCount가 10으로 설정시 index 3 = 40~50번대 결과)
+     * @param pageIndex          가져오길 원하는 페이지 인덱스 (ex: pageCount가 10으로 설정시 index 3 = 40~50번대 결과)
      */
     public Query paginate(int resultCountPerPage, int pageIndex) {
         if (resultCountPerPage <= 0) {
@@ -277,6 +279,7 @@ public class Query {
 
     /**
      * 주어진 필드를 기준으로 오름차순 정렬한다.
+     *
      * @param fieldName 필드
      */
     public Query sortAscending(String fieldName) {
@@ -286,6 +289,7 @@ public class Query {
 
     /**
      * 주어진 필드를 기준으로 내림차순 정렬한다.
+     *
      * @param fieldName 필드
      */
     public Query sortDescending(String fieldName) {
@@ -295,13 +299,14 @@ public class Query {
 
     /**
      * 쿼리를 수행한 결과(Entity)의 목록을 받는다.
+     *
      * @param callback {@link com.haru.callback.FindCallback}
      */
     public void findAll(final FindCallback callback) {
         Param param = new Param();
         param.put("where", mainQueryObject.toString());
         if (sortOption.length() != 0)
-            param.put("sort", sortOption.substring(0, sortOption.length()-1));
+            param.put("sort", sortOption.substring(0, sortOption.length() - 1));
 
         if (countPerPage != -1 && pageIndex != -1) {
             Param sortParam = new Param();
@@ -336,7 +341,7 @@ public class Query {
                 // re-encode results(containedIn JSON format) to Entity Object
                 ArrayList<Entity> findResult = new ArrayList<Entity>();
                 JSONArray array = response.getJsonBody().getJSONArray("results");
-                for (int i=0;i<array.length();i++) {
+                for (int i = 0; i < array.length(); i++) {
                     findResult.add(Entity.fromJson(classObject, className, array.getJSONObject(i)));
                 }
 
@@ -348,6 +353,7 @@ public class Query {
 
     /**
      * 쿼리를 수행하고 1개의 결과만을 받는다.
+     *
      * @param callback {@link com.haru.callback.GetCallback}
      */
     public void findOne(final GetCallback callback) {
@@ -388,8 +394,7 @@ public class Query {
         return mainQueryObject.toString();
     }
 
-    public JSONObject getJson() {
+    public JSONObject toJson() {
         return mainQueryObject;
     }
-
 }

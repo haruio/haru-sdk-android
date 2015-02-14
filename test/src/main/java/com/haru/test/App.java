@@ -21,7 +21,7 @@ public class App extends Application {
         Installation.init(this);
         Push.init(this, "tcp://54.65.101.20:1884");
 
-        Push.subscribe("testChannel");
+        Push.subscribe("testChannela");
 
         Config.loadInBackground();
     }

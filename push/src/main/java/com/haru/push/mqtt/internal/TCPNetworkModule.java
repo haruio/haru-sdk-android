@@ -63,7 +63,7 @@ public class TCPNetworkModule implements NetworkModule {
 			// This should not be required.
 //			socket.setTcpNoDelay(true);	// TCP_NODELAY on, which means we do not use Nagle's algorithm
 		}
-		catch (ConnectException ex) {
+		catch (Exception ex) {
 			throw new MqttException(MqttException.REASON_CODE_SERVER_CONNECT_ERROR, ex);
 		}
 	}

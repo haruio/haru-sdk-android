@@ -7,6 +7,7 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.haru.callback.GetCallback;
 import com.haru.callback.SaveCallback;
 
 import org.json.JSONArray;
@@ -21,7 +22,7 @@ import java.util.UUID;
 
 /**
  * 앱 설치 정보이다. 앱이 설치된 이후, 처음 실행시 생성되어 서버에 저장된다.
- * <br/> 통계 및 푸시에 사용된다.
+ * <br> 통계 및 푸시에 사용된다.
  */
 @ClassNameOfEntity(Installation.CLASS_NAME)
 public final class Installation extends Entity {
@@ -46,7 +47,7 @@ public final class Installation extends Entity {
      * Installation 기능을 사용하고, 현재 앱 설치 정보를 서버에 전송한다.
      * @param appContext Application Context {@link android.app.Application}
      */
-    public static void init(Context appContext) {
+    public static void init(Context appContext, final SaveCallback makeCallback) {
         context = appContext;
 
         // check already have installation in local
@@ -66,11 +67,14 @@ public final class Installation extends Entity {
                     if (error != null) {
                         Log.e("Haru", "An error occured when saving installation first time : " + error.getMessage());
                         error.printStackTrace();
+                        if (makeCallback != null) makeCallback.done(error);
                         return;
                     }
 
                     // save in local
                     LocalEntityStore.saveEntity(currentInstallation, CURRENT_INSTALLATION_TAG);
+
+                    if (makeCallback != null) makeCallback.done(null);
                 }
             });
 
@@ -84,6 +88,10 @@ public final class Installation extends Entity {
 //          currentInstallation.saveInBackground();
         }
         initialized = true;
+    }
+
+    public static void init(Context appContext) {
+        init(appContext, null);
     }
 
     public static boolean isInitialized() {
@@ -197,6 +205,16 @@ public final class Installation extends Entity {
     }
 
     private void updateUuid() {
+        getDeviceUuid();
+        put("deviceToken", mUUID);
+        Haru.logI("deviceToken : %s", mUUID);
+    }
+
+    /**
+     * 디바이스의 UUID를 구한다. (deviceToken)
+     * @return device UUID
+     */
+    public static String getDeviceUuid() {
         if (mUUID == null) {
             TelephonyManager tm =
                     (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
@@ -212,8 +230,7 @@ public final class Installation extends Entity {
                     ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
             mUUID = deviceUuid.toString();
         }
-        put("deviceToken", mUUID);
-        Haru.logI("deviceToken : %s", mUUID);
+        return mUUID;
     }
 
     /**

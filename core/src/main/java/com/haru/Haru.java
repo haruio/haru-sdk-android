@@ -150,19 +150,19 @@ public class Haru {
                             value = json.getBoolean(key);
 
                         } catch (JSONException je) {
+                            // or JSONObject?
                             try {
-                                // TODO: Nested array 처리
-                                value = json.getJSONArray(key);
+                                JSONObject nestedJson = json.getJSONObject(key);
+                                Map<String, Object> nestedMap = new HashMap<String, Object>();
+                                convertJsonToMap(nestedJson, nestedMap);
+                                value = nestedMap;
 
-                            } catch (JSONException jee) {
-                                // or JSONObject?
+                            } catch (JSONException jeee) {
                                 try {
-                                    JSONObject nestedJson = json.getJSONObject(key);
-                                    Map<String, Object> nestedMap = new HashMap<String, Object>();
-                                    convertJsonToMap(nestedJson, nestedMap);
-                                    value = nestedMap;
+                                    // TODO: Nested array 처리
+                                    value = json.getJSONArray(key);
 
-                                } catch (JSONException jeee) {
+                                } catch (JSONException jee) {
                                     try {
                                         value = json.getString(key);
 

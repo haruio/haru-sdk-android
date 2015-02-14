@@ -17,7 +17,7 @@ import com.haru.push.PushReceiver;
 public class TestPushReceiver extends PushReceiver {
 
     private static int NOTI_ID = 1000;
-/*
+
     @Override
     public Notification onNotification(Context context, Push push) {
         Log.d("HaruTest", "Noti Received  " + push.getMessage());
@@ -31,7 +31,7 @@ public class TestPushReceiver extends PushReceiver {
                 .setSmallIcon(R.drawable.ic_launcher)
                 .build();
     }
-*/
+
     @Override
     public void onMessage(Context context, Push push) {
         Log.i("HaruTest", "Message Received => " + push.getMessage());

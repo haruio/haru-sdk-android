@@ -32,8 +32,7 @@ class MqttPushRoute implements MqttCallback {
 
     // fields for the connection definition
     private static String serverUri = "tcp://push.haru.io:80";
-    private String clientId = "Android SDK " + Haru.getSdkVersion()
-            + " " + Installation.getCurrentInstallation().get("deviceToken");
+    private String clientId;
 
     private MqttClientPersistence persistence = null;
 
@@ -68,6 +67,10 @@ class MqttPushRoute implements MqttCallback {
      */
     public void connect() {
         Haru.logD("Push: Connecting...");
+
+        if (clientId == null) {
+            clientId = "Android SDK " + Haru.getSdkVersion() + " " + Installation.getDeviceUuid();
+        }
 
         try {
             if (persistence == null) {
@@ -222,7 +225,9 @@ class MqttPushRoute implements MqttCallback {
      */
     @Override
     public void connectionLost(Throwable why) {
-        Haru.logD("Push: connectionLost(%s)", why.getCause().getMessage());
+        if (why != null && why.getCause() != null) {
+            Haru.logD("Push: connectionLost(%s)", why.getCause().getMessage());
+        }
 
         disconnected = true;
         try {

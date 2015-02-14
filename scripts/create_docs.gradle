@@ -22,6 +22,10 @@ def getExcludedList() {
     hasProperty('EXCLUDED_FROM_DOCS') ? EXCLUDED_FROM_DOCS.split(", ") : []
 }
 
+def getExcludeMainDir() {
+    hasProperty('EXCLUDE_MAIN_DIR') ? EXCLUDE_MAIN_DIR : "com/haru"
+}
+
 // Generate javadocs and sources.
 afterEvaluate { project ->
     android.libraryVariants.all { variant ->
@@ -34,12 +38,14 @@ afterEvaluate { project ->
         def javadocTask = task("${variantName}Javadoc", type: Javadoc) {
             source = variant.javaCompile.source
             classpath = files(variant.javaCompile.classpath.files, getAndroidJar())
-            exclude getExcludedList().collect { "**/com/haru/${it}" }
+
+            exclude getExcludedList().collect { "**/${getExcludeMainDir()}/${it}" }
 
             options {
                 links("http://docs.oracle.com/javase/7/docs/api/")
                 linksOffline("http://d.android.com/reference", "${android.sdkDirectory}/docs/reference")
             }
+            options.addStringOption('Xdoclint:none', '-quiet')
             options.charSet = 'UTF-8'
             title 'Plugy Android SDK'
         }

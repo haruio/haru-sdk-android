@@ -252,31 +252,74 @@ public class Push implements Parcelable {
     }
 
     public String getTitle() {
-        return (String) data.get("title");
+        return getStringExtra("title");
     }
 
     public String getMessage() {
-        return (String) data.get("message");
+        return getStringExtra("message");
     }
 
+    /**
+     * 푸시 메세지로부터 특정 키에 해당하는 문자열 데이터를 가져온다.
+     *
+     * @param key 키값
+     * @return 데이터 (String)
+     */
     public String getStringExtra(String key) {
-        return (String) data.get(key);
+        try {
+            return (String) data.get(key);
+        } catch (Exception e) {
+            return data.get(key).toString();
+        }
     }
 
+    /**
+     * 푸시 메세지로부터 특정 키에 해당하는 int 데이터를 가져온다.
+     *
+     * @param key 키값
+     * @return 데이터 (int)
+     */
     public int getIntExtra(String key) {
-        return (Integer) data.get(key);
+        try {
+            return (Integer) data.get(key);
+        } catch (Exception e) {
+            return Integer.valueOf((String) data.get(key));
+        }
     }
 
+    /**
+     * 푸시 메세지로부터 특정 키에 해당하는 Long 데이터를 가져온다.
+     *
+     * @param key 키값
+     * @return 데이터 (Long)
+     */
     public long getLongExtra(String key) {
         return (Long) data.get(key);
     }
 
+    /**
+     * 푸시 메세지로부터 특정 키에 해당하는 Double 데이터를 가져온다.
+     *
+     * @param key 키값
+     * @return 데이터 (Double)
+     */
     public double getDoubleExtra(String key) {
-        return (Double) data.get(key);
+        try {
+            return (Double) data.get(key);
+        } catch (Exception e) {
+            return Double.valueOf((String) data.get(key));
+        }
     }
 
-    public Object getExtra(String key) {
-        return data.get(key);
+    /**
+     * 푸시 메세지로부터 특정 키에 해당하는 데이터를 가져온다.
+     *
+     * @param key 키값
+     * @return 데이터 (자동으로 type-casting됨)
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getExtra(String key) {
+        return (T) data.get(key);
     }
 
     public Query getUserQuery() {

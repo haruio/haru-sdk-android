@@ -7,9 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
 
 import com.haru.Haru;
 import com.haru.Installation;
@@ -141,22 +143,26 @@ public class PushService extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            // we protect against the phone switching off
-            // by requesting a wake lock - we request the minimum possible wake
-            // lock - just enough to keep the CPU running until we've finished
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MQTT");
-            wl.acquire();
+            try {
+                // we protect against the phone switching off
+                // by requesting a wake lock - we request the minimum possible wake
+                // lock - just enough to keep the CPU running until we've finished
+                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MQTT");
+                wl.acquire();
 
-            mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
+                mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
 
-            if (isNetworkOnline()) {
-                // we have an internet connection - have another try at
-                // connecting
-                mqttPushRoute.reconnect();
-            } else mqttPushRoute.offline();
+                if (isNetworkOnline()) {
+                    // we have an internet connection - have another try at
+                    // connecting
+                    mqttPushRoute.reconnect();
+                } else mqttPushRoute.offline();
+                wl.release();
 
-            wl.release();
+            } catch (Exception e) {
+                if (e != null) Haru.logE(e.getMessage());
+            }
         }
     }
 
@@ -169,28 +175,33 @@ public class PushService extends Service {
         @SuppressWarnings("deprecation")
         @Override
         public void onReceive(Context context, Intent intent) {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-            Haru.logD("Push: Reconnect since background data is enabled.");
-            if (cm.getBackgroundDataSetting()) {
-                if (!backgroundDataEnabled) {
-                    // we have the Internet connection - have another try at reconnecting.
-                    backgroundDataEnabled = true;
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+                Haru.logD("Push: Reconnect since background data is enabled.");
+                if (cm.getBackgroundDataSetting()) {
+                    if (!backgroundDataEnabled) {
+                        // we have the Internet connection - have another try at reconnecting.
+                        backgroundDataEnabled = true;
+                        mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
+                        mqttPushRoute.reconnect();
+                    }
+                } else {
+                    backgroundDataEnabled = false;
                     mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
-                    mqttPushRoute.reconnect();
+                    mqttPushRoute.offline();
                 }
-            } else {
-                backgroundDataEnabled = false;
-                mqttPushRoute.onNetworkStateChanged(isNetworkOnline());
-                mqttPushRoute.offline();
+            } catch (Exception e) {
+                if (e != null) Haru.logE(e.getMessage());
             }
         }
     }
 
-    public boolean isNetworkOnline() {
+    public boolean isNetworkOnline() throws Exception {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo() != null
-                && cm.getActiveNetworkInfo().isAvailable()
-                && cm.getActiveNetworkInfo().isConnected()
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        return networkInfo != null
+                && networkInfo.isAvailable()
+                && networkInfo.isConnected()
                 && backgroundDataEnabled;
     }
 }

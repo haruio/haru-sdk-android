@@ -17,11 +17,11 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         Log.e("Haru", "===========================================================================");
-        Haru.init(this, APP_KEY, SDK_KEY,  "http://54.65.126.198/1");
+        Haru.init(this,  "9552b75d-5eb3-4474-870f-8fde67ac761f", "1158513e-6742-456a-8cc9-6dd3dfa060c3","http://api.haru.io/1");
         Installation.init(this);
-        Push.init(this, "tcp://54.65.101.20:1884");
+        Push.init(this, "tcp://52.68.245.47:1883");
 
-        Push.subscribe("testChannela");
+        Push.subscribe("testChannel");
 
         Config.loadInBackground();
     }

@@ -18,7 +18,6 @@ import java.util.*;
  * 각종 함수들을 모아놓은 Utility Class의 역할을 한다.
  */
 public class Haru {
-
     private static final String SDK_VERSION_NAME = "0.2.7-beta";
     private static final boolean IS_DEBUG_BUILD = true;
 
@@ -271,7 +270,6 @@ public class Haru {
             param.put("androidVersion", "");
             param.put("device", "");
         }
-
 
         // request to help center server
         Task<HaruResponse> trackPurchaseTask = new HaruRequest("/monetization")
